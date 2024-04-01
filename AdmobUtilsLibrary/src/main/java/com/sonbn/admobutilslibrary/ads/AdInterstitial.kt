@@ -1,4 +1,4 @@
-package com.edge.edgelight.mutiple.ads
+package com.sonbn.admobutilslibrary.ads
 
 import android.app.Activity
 import android.content.Context
@@ -7,9 +7,7 @@ import android.os.SystemClock
 import android.util.Log
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.FragmentActivity
-import com.edge.edgelight.mutiple.config.ConfigManager
-import com.edge.edgelight.mutiple.ui.dialog.DialogLoadingAd
-import com.edge.edgelight.mutiple.util.AdjustUtil
+import com.sonbn.admobutilslibrary.dialog.DialogLoadingAd
 import com.google.android.gms.ads.AdError
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.FullScreenContentCallback
@@ -28,11 +26,11 @@ object AdInterstitial {
     private var interstitialPercent = 100
 
     fun setFrequencyCapping(value: Int) {
-        this.frequencyCapping = value
+        frequencyCapping = value
     }
 
     fun setInterstitialPercent(value: Int) {
-        this.interstitialPercent = value
+        interstitialPercent = value
     }
 
     fun loadInterstitial(mContext: Context, id: String) {
@@ -117,7 +115,6 @@ object AdInterstitial {
 
             override fun onAdShowedFullScreenContent() {
                 // Called when ad is shown.
-                AdjustUtil.trackingRevenue(map[id])
                 isShowedFullScreen = true
                 dismissDialog(dialogLoadingAd)
                 Log.d(TAG, "Ad showed fullscreen content.")

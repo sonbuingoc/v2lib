@@ -1,4 +1,4 @@
-package com.edge.edgelight.mutiple.ads
+package com.sonbn.admobutilslibrary.ads
 
 import android.app.Activity
 import android.app.Application
@@ -11,8 +11,7 @@ import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
-import com.edge.edgelight.mutiple.ui.dialog.DialogLoadingAd
-import com.edge.edgelight.mutiple.util.AdjustUtil
+import com.sonbn.admobutilslibrary.dialog.DialogLoadingAd
 import com.google.android.gms.ads.AdError
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.FullScreenContentCallback
@@ -140,7 +139,6 @@ class ResumeManager {
             object : FullScreenContentCallback() {
                 override fun onAdDismissedFullScreenContent() {
                     // Set the reference to null so isAdAvailable() returns false.
-                    AdjustUtil.trackingRevenue(appOpenAd)
                     appOpenAd = null
                     isShowingAd = false
                     fetchAd()

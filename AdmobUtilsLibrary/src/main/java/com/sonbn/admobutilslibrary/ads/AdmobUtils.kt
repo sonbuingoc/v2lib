@@ -1,9 +1,7 @@
-package com.edge.edgelight.mutiple.ads
+package com.sonbn.admobutilslibrary.ads
 
-import android.app.Activity
 import android.content.Context
 import android.net.ConnectivityManager
-import com.edge.edgelight.mutiple.base.MyApplication
 import com.google.android.gms.ads.MobileAds
 
 

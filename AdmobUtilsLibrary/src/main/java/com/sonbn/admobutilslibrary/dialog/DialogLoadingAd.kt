@@ -1,4 +1,4 @@
-package com.edge.edgelight.mutiple.ui.dialog
+package com.sonbn.admobutilslibrary.dialog
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -7,7 +7,7 @@ import android.view.ViewGroup
 import android.view.Window
 import android.view.WindowManager
 import androidx.fragment.app.DialogFragment
-import com.edge.light.mutiple.databinding.DialogLoadingAdBinding
+import com.sonbn.admobutilslibrary.databinding.DialogLoadingAdBinding
 
 class DialogLoadingAd : DialogFragment() {
     private var _binding: DialogLoadingAdBinding? = null

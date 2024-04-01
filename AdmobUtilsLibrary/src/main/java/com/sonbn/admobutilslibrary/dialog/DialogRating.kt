@@ -1,4 +1,4 @@
-package com.edge.edgelight.mutiple.ui.dialog
+package com.sonbn.admobutilslibrary.dialog
 
 import android.content.Context
 import android.content.Intent
@@ -10,16 +10,23 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.animation.AnimationUtils
 import androidx.fragment.app.DialogFragment
-import com.edge.edgelight.mutiple.util.SharePreferencesManager
-import com.edge.light.mutiple.R
-import com.edge.light.mutiple.databinding.DialogRatingBinding
 import com.google.android.play.core.review.ReviewManagerFactory
+import com.sonbn.admobutilslibrary.R
+import com.sonbn.admobutilslibrary.databinding.DialogRatingBinding
 
-class DialogRating : DialogFragment() {
+class DialogRating() : DialogFragment() {
     private var _binding: DialogRatingBinding? = null
     private val binding get() = _binding!!
     private lateinit var ctx: Context
     private var star = 4
+
+    var feedbackEmail: String = ""
+    var appName: String = ""
+    var versionCode: String = ""
+    var versionName: String = ""
+
+    var mCallback: Callback? = null
+
     override fun onAttach(context: Context) {
         super.onAttach(context)
         ctx = context
@@ -27,7 +34,7 @@ class DialogRating : DialogFragment() {
 
     override fun onStart() {
         super.onStart()
-        dialog?.window?.setBackgroundDrawableResource(com.google.android.material.R.color.mtrl_btn_transparent_bg_color)
+        dialog?.window?.setBackgroundDrawableResource(R.color.transparent)
     }
 
     override fun onCreateView(
@@ -68,6 +75,7 @@ class DialogRating : DialogFragment() {
         } else {
             feedback()
         }
+        mCallback?.onClickRate(star)
         dismiss()
     }
 
@@ -104,32 +112,25 @@ class DialogRating : DialogFragment() {
                 val reviewInfo = task.result
                 val flow = reviewManager.launchReviewFlow(requireActivity(), reviewInfo)
                 flow.addOnCompleteListener { _ ->
-                    SharePreferencesManager.setRate(true)
+
                 }
             } else {
                 requireActivity().runOnUiThread {
                     rating()
-                    SharePreferencesManager.setRate(true)
                 }
             }
         }
     }
 
     private fun feedback() {
-        val appInfo = ("App: " + getString(R.string.app_name) + " Device: " + Build.MODEL + " "
-                + " SDK: " + Build.VERSION.SDK)
+        val appInfo =
+            "App: $appName versionCode: $versionCode versionName: $versionName device: ${Build.MODEL} sdk: ${Build.VERSION.SDK}"
         val email = Intent(Intent.ACTION_SENDTO)
-//        email.putExtra(
-//            Intent.EXTRA_EMAIL,
-//            arrayOf<String>(AppConfigs.getInstance().configsModel.feedbackEmail)
-//        )
-        email.putExtra(Intent.EXTRA_SUBJECT, appInfo)
         email.putExtra(
-            Intent.EXTRA_TEXT, """
-     ${getString(R.string.app_name)}
-     
-     """.trimIndent()
+            Intent.EXTRA_EMAIL,
+            arrayOf(feedbackEmail)
         )
+        email.putExtra(Intent.EXTRA_SUBJECT, appInfo)
         email.data = Uri.parse("mailto:")
         startActivity(Intent.createChooser(email, appInfo))
     }
@@ -151,5 +152,9 @@ class DialogRating : DialogFragment() {
                 )
             )
         }
+    }
+
+    interface Callback {
+        fun onClickRate(star: Int)
     }
 }

@@ -1,4 +1,4 @@
-package com.edge.edgelight.mutiple.ads
+package com.sonbn.admobutilslibrary.ads
 
 import android.app.Activity
 import android.os.Bundle
@@ -7,19 +7,14 @@ import android.os.Looper
 import android.util.DisplayMetrics
 import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
-import android.view.WindowManager
 import android.widget.FrameLayout
-import com.edge.edgelight.mutiple.util.AdjustUtil
-import com.edge.edgelight.mutiple.util.ViewUtils
-import com.edge.light.mutiple.R
-import com.edge.light.mutiple.databinding.ShimmerBannerBinding
 import com.facebook.shimmer.ShimmerFrameLayout
 import com.google.ads.mediation.admob.AdMobAdapter
 import com.google.android.gms.ads.AdListener
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdSize
 import com.google.android.gms.ads.AdView
+import com.sonbn.admobutilslibrary.databinding.ShimmerBannerBinding
 
 
 object AdBanner {
@@ -51,8 +46,6 @@ object AdBanner {
                 frameLayout.removeAllViews()
                 frameLayout.addView(mAdView)
                 isLoaded = true
-                //Adjust
-                AdjustUtil.trackingRevenue(mAdView)
             }
         }
         Handler(Looper.getMainLooper()).postDelayed({
@@ -98,8 +91,6 @@ object AdBanner {
                 frameLayout.removeAllViews()
                 frameLayout.addView(mAdView)
                 isLoaded = true
-                //Adjust
-                AdjustUtil.trackingRevenue(mAdView)
             }
         }
         Handler(Looper.getMainLooper()).postDelayed({

@@ -1,12 +1,11 @@
-package com.edge.edgelight.mutiple.ads
+package com.sonbn.admobutilslibrary.ads
 
 import android.app.Activity
 import android.os.Looper
 import android.util.Log
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.FragmentActivity
-import com.edge.edgelight.mutiple.ui.dialog.DialogLoadingAd
-import com.edge.edgelight.mutiple.util.AdjustUtil
+import com.sonbn.admobutilslibrary.dialog.DialogLoadingAd
 import com.google.android.gms.ads.AdError
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.FullScreenContentCallback
@@ -81,8 +80,6 @@ object AppOpenManager {
                     android.os.Handler(Looper.getMainLooper()).postDelayed({
                         ad.show(mActivity)
                     }, 3000)
-
-                    AdjustUtil.trackingRevenue(ad)
                 } else {
                     ad.show(mActivity)
                 }

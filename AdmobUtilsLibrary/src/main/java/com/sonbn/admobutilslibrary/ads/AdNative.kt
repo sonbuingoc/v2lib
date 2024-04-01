@@ -1,8 +1,7 @@
-package com.edge.edgelight.mutiple.ads
+package com.sonbn.admobutilslibrary.ads
 
 import android.app.Activity
 import android.text.TextUtils
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -11,19 +10,18 @@ import android.widget.ImageView
 import android.widget.RatingBar
 import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
-import com.edge.edgelight.mutiple.util.AdjustUtil
-import com.edge.light.mutiple.R
-import com.edge.light.mutiple.databinding.ShimmerNativeMediumBinding
-import com.edge.light.mutiple.databinding.ShimmerNativeSmallBinding
-import com.google.ads.mediation.facebook.FacebookMediationAdapter
 import com.google.android.gms.ads.AdLoader
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.nativead.MediaView
 import com.google.android.gms.ads.nativead.NativeAd
 import com.google.android.gms.ads.nativead.NativeAdView
+import com.sonbn.admobutilslibrary.R
+import com.sonbn.admobutilslibrary.databinding.ShimmerNativeMediumBinding
+import com.sonbn.admobutilslibrary.databinding.ShimmerNativeSmallBinding
 
 
 private const val TAG = "AdNative"
+
 object AdNative {
     private val map = mutableMapOf<String, NativeAd>()
     fun loadNative(activity: Activity, id: String) {
@@ -42,7 +40,8 @@ object AdNative {
     fun loadAndShowNativeSmall(
         activity: Activity,
         id: String,
-        viewGroup: ViewGroup
+        viewGroup: ViewGroup,
+        idLayout: Int? = null
     ) {
         var nativeId = id
         if (AdmobUtils.isDebug) {
@@ -56,9 +55,11 @@ object AdNative {
         layoutShimmer.startShimmer()
         viewGroup.removeAllViews()
         viewGroup.addView(layoutShimmer)
+        var layout = idLayout
+        if (layout == null) layout = R.layout.gnt_small_template_view
         val builder = AdLoader.Builder(activity, nativeId).forNativeAd { p0 ->
             layoutShimmer.stopShimmer()
-            showNative(activity, id, p0, viewGroup, R.layout.gnt_small_template_view)
+            showNative(activity, id, p0, viewGroup, layout)
         }.build()
         builder.loadAd(AdRequest.Builder().build())
     }
@@ -66,7 +67,8 @@ object AdNative {
     fun loadAndShowNativeMedium(
         activity: Activity,
         id: String,
-        viewGroup: ViewGroup
+        viewGroup: ViewGroup,
+        idLayout: Int? = null
     ) {
         var nativeId = id
         if (AdmobUtils.isDebug) {
@@ -80,9 +82,11 @@ object AdNative {
         layoutShimmer.startShimmer()
         viewGroup.removeAllViews()
         viewGroup.addView(layoutShimmer)
+        var layout = idLayout
+        if (layout == null) layout = R.layout.gnt_medium_template_view
         val builder = AdLoader.Builder(activity, nativeId).forNativeAd { p0 ->
             layoutShimmer.stopShimmer()
-            showNative(activity, id, p0, viewGroup, R.layout.gnt_medium_template_view)
+            showNative(activity, id, p0, viewGroup, layout)
         }.build()
         builder.loadAd(AdRequest.Builder().build())
     }
@@ -109,7 +113,6 @@ object AdNative {
     }
 
     private fun setNative(nativeAd: NativeAd, layoutNative: NativeAdView): NativeAdView {
-        AdjustUtil.trackingRevenue(nativeAd)
         val nativeAdView: NativeAdView? = layoutNative.findViewById(R.id.native_ad_view)
         val primaryView: TextView? = layoutNative.findViewById(R.id.primary)
         val secondaryView: TextView? = layoutNative.findViewById(R.id.secondary)
