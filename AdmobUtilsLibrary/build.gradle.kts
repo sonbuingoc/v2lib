@@ -57,7 +57,7 @@ afterEvaluate {
         publications {
             create<MavenPublication>("maven") {
                 from (components.getByName("release"))
-                groupId = "com.sonbn.admobutilslibrary"
+                groupId = "com.github.sonbuingoc:AdmobUtilsLibrary"
                 artifactId = "com.sonbn.admobutilslibrary"
                 version = "1.0.0"
             }
