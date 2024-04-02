@@ -35,7 +35,18 @@ android {
         enable = true
     }
 }
-
+publishing {
+    publications {
+        register<MavenPublication>("release") {
+            afterEvaluate {
+                from(components["release"])
+                groupId = "com.github.sonbuingoc"
+                artifactId = "admobutilslibrary"
+                version = "0.0.1"
+            }
+        }
+    }
+}
 dependencies {
 
     implementation("androidx.core:core-ktx:1.9.0")
@@ -52,23 +63,3 @@ dependencies {
     implementation("com.google.android.play:review-ktx:2.0.1")
 }
 
-afterEvaluate {
-    publishing {
-        publications {
-            create<MavenPublication>("maven") {
-                from(components["release"])
-                groupId = "com.github.sonbuingoc"
-                artifactId = "admobutilslibrary"
-                version = "0.0.1"
-
-                artifact("$buildDir/outputs/aar/${project.name}-release.aar")
-            }
-        }
-        repositories {
-            maven {
-                name = "jitpack"
-                url = uri("https://jitpack.io")
-            }
-        }
-    }
-}
