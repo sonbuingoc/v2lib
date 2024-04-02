@@ -60,6 +60,14 @@ afterEvaluate {
                 groupId = "com.github.sonbuingoc"
                 artifactId = "admobutilslibrary"
                 version = "0.0.1"
+
+                artifact("$buildDir/outputs/aar/${project.name}-release.aar")
+            }
+        }
+        repositories {
+            maven {
+                name = "jitpack"
+                url = uri("https://jitpack.io")
             }
         }
     }
