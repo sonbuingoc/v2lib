@@ -1,4 +1,6 @@
 jdk:
-  - openjdk11
+  - openjdk9
 
-project: library_folder_name
+before_install:
+   - sdk install java 11.0.10-open
+   - sdk use java 11.0.10-open
