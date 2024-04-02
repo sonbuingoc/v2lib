@@ -40,9 +40,6 @@ publishing {
         register<MavenPublication>("release") {
             afterEvaluate {
                 from(components["release"])
-                groupId = "com.github.sonbuingoc"
-                artifactId = "admobutilslibrary"
-                version = "0.0.1"
             }
         }
     }
