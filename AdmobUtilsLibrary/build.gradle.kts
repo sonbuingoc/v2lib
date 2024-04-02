@@ -40,6 +40,7 @@ publishing {
         register<MavenPublication>("release") {
             afterEvaluate {
                 from(components["release"])
+
             }
         }
     }
