@@ -18,23 +18,24 @@ import com.google.android.gms.ads.FullScreenContentCallback
 import com.google.android.gms.ads.LoadAdError
 import com.google.android.gms.ads.appopen.AppOpenAd
 import com.google.android.gms.ads.appopen.AppOpenAd.AppOpenAdLoadCallback
+import java.lang.ref.WeakReference
 import java.util.Date
 
 private const val TAG = "ResumeAdManager"
 
 class ResumeManager {
     companion object {
-        private var set = mutableSetOf<Class<*>?>()
-        fun insertActivityDisableAd(activity: Class<*>) {
-            set.add(activity)
+        private var instance: ResumeManager? = null
+        fun getInstance(): ResumeManager {
+            if (instance == null) instance = ResumeManager()
+            return instance!!
         }
 
-        fun removeActivityDisableAd(activity: Class<*>) {
-            set.remove(activity)
-        }
     }
 
-    private var mActivity: Activity? = null
+    private var mActivityRef: WeakReference<Activity>? = null
+    private var set = mutableSetOf<Class<*>?>()
+    //    private var mActivity: Activity? = null
     private var isShowingAd = false
     private var appOpenAd: AppOpenAd? = null
     private var loadTime: Long = 0
@@ -53,6 +54,22 @@ class ResumeManager {
         fetchAd()
     }
 
+    private fun setActivity(activity: Activity?) {
+        mActivityRef = WeakReference(activity)
+    }
+
+    private fun getActivity(): Activity? {
+        return mActivityRef?.get()
+    }
+
+    fun insertActivityDisableAd(activity: Class<*>) {
+        set.add(activity)
+    }
+
+    fun removeActivityDisableAd(activity: Class<*>) {
+        set.remove(activity)
+    }
+
     private val defaultLifecycleObserver = object : DefaultLifecycleObserver {
         override fun onStart(owner: LifecycleOwner) {
             super.onStart(owner)
@@ -65,7 +82,7 @@ class ResumeManager {
         }
 
         override fun onActivityStarted(p0: Activity) {
-            mActivity = p0
+            setActivity(p0)
         }
 
         override fun onActivityResumed(p0: Activity) {
@@ -81,7 +98,7 @@ class ResumeManager {
         }
 
         override fun onActivityDestroyed(p0: Activity) {
-            mActivity = null
+            setActivity(null)
         }
 
     }
@@ -133,7 +150,7 @@ class ResumeManager {
         }
 
         val dialogLoadingAd = DialogLoadingAd()
-        val fragmentActivity = mActivity as FragmentActivity
+        val fragmentActivity = getActivity() as FragmentActivity
 
         val fullScreenContentCallback: FullScreenContentCallback =
             object : FullScreenContentCallback() {
@@ -168,18 +185,18 @@ class ResumeManager {
                     DialogLoadingAd::class.simpleName
                 )
                 Handler(Looper.getMainLooper())
-                    .postDelayed({ appOpenAd!!.show(mActivity!!) }, 3000)
+                    .postDelayed({ appOpenAd!!.show(getActivity()!!) }, 3000)
             } else {
-                appOpenAd!!.show(mActivity!!)
+                appOpenAd!!.show(getActivity()!!)
             }
         }
 
     }
 
     private fun available(): Boolean {
-        if (appOpenAd == null || mActivity == null) return false
+        if (appOpenAd == null || getActivity() == null) return false
         if (AdInterstitial.isShowedFullScreen) return false
-        if (set.indexOf(mActivity!!::class.java) != -1) return false
+        if (set.indexOf(getActivity()!!::class.java) != -1) return false
         return true
     }
 
