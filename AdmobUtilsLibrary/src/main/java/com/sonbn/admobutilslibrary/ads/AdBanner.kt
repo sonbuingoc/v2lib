@@ -19,7 +19,10 @@ import com.sonbn.admobutilslibrary.databinding.ShimmerBannerBinding
 
 object AdBanner {
     private const val TIME_OUT = 60 * 1000L
-    fun showBanner(mActivity: Activity, id: String, frameLayout: FrameLayout, line: View) {
+    interface Callback{
+        fun onAdLoaded(adView: AdView?)
+    }
+    fun showBanner(mActivity: Activity, id: String, frameLayout: FrameLayout, line: View, mCallback: Callback? = null) {
         var isLoaded = false
         if (!AdmobUtils.isNetworkAvailable(mActivity) || !AdmobUtils.isShowAds) {
             line.visibility = View.GONE
@@ -46,6 +49,7 @@ object AdBanner {
                 frameLayout.removeAllViews()
                 frameLayout.addView(mAdView)
                 isLoaded = true
+                mCallback?.onAdLoaded(mAdView)
             }
         }
         Handler(Looper.getMainLooper()).postDelayed({

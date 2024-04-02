@@ -24,6 +24,9 @@ private const val TAG = "AdNative"
 
 object AdNative {
     private val map = mutableMapOf<String, NativeAd>()
+    interface Callback{
+        fun onAdLoaded(nativeAd: NativeAd?)
+    }
     fun loadNative(activity: Activity, id: String) {
         var nativeId = id
         if (AdmobUtils.isDebug) {
@@ -41,7 +44,8 @@ object AdNative {
         activity: Activity,
         id: String,
         viewGroup: ViewGroup,
-        idLayout: Int? = null
+        idLayout: Int? = null,
+        callback: Callback? = null
     ) {
         var nativeId = id
         if (AdmobUtils.isDebug) {
@@ -60,6 +64,7 @@ object AdNative {
         val builder = AdLoader.Builder(activity, nativeId).forNativeAd { p0 ->
             layoutShimmer.stopShimmer()
             showNative(activity, id, p0, viewGroup, layout)
+            callback?.onAdLoaded(p0)
         }.build()
         builder.loadAd(AdRequest.Builder().build())
     }
@@ -68,7 +73,8 @@ object AdNative {
         activity: Activity,
         id: String,
         viewGroup: ViewGroup,
-        idLayout: Int? = null
+        idLayout: Int? = null,
+        callback: Callback?
     ) {
         var nativeId = id
         if (AdmobUtils.isDebug) {
@@ -87,6 +93,7 @@ object AdNative {
         val builder = AdLoader.Builder(activity, nativeId).forNativeAd { p0 ->
             layoutShimmer.stopShimmer()
             showNative(activity, id, p0, viewGroup, layout)
+            callback?.onAdLoaded(p0)
         }.build()
         builder.loadAd(AdRequest.Builder().build())
     }

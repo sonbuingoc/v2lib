@@ -34,10 +34,17 @@ object ResumeManager {
     private var mApplication: Application? = null
     private var id: String = AdmobUtils.APP_OPEN
     private var showDialogLoading = true
-    fun init(application: Application, id: String, showDialogLoading: Boolean = true) {
+    private var onShowAdCompleteListener: OnShowAdCompleteListener? = null
+    fun init(
+        application: Application,
+        id: String,
+        showDialogLoading: Boolean = true,
+        onShowAdCompleteListener: OnShowAdCompleteListener? = null
+    ) {
         this.mApplication = application
         this.id = id
         this.showDialogLoading = showDialogLoading
+        this.onShowAdCompleteListener = onShowAdCompleteListener
 
         application.registerActivityLifecycleCallbacks(activityLifecycleCallbacks)
         ProcessLifecycleOwner.get().lifecycle.addObserver(defaultLifecycleObserver)
@@ -161,6 +168,7 @@ object ResumeManager {
                 }
 
                 override fun onAdShowedFullScreenContent() {
+                    onShowAdCompleteListener?.onShowAdComplete(appOpenAd)
                     dismissDialog(dialogLoadingAd)
                     isShowingAd = true
                     Log.d(TAG, "onAdShowedFullScreenContent")

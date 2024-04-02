@@ -77,7 +77,7 @@ object AdInterstitial {
             loadInterstitial(mActivity, id)
             return
         }
-
+        callback.onAdLoaded(map[id])
         val dialogLoadingAd = DialogLoadingAd()
         val fragmentActivity = mActivity as FragmentActivity
 
@@ -156,6 +156,7 @@ object AdInterstitial {
 
     interface AdInterstitialCallback {
         fun onCallback()
+        fun onAdLoaded(interstitialAd: InterstitialAd?)
     }
 
 }

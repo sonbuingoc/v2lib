@@ -21,13 +21,10 @@ import kotlinx.coroutines.launch
 private const val TAG = "AOAManager"
 
 object AppOpenManager {
+    private var appOpenAd: AppOpenAd? = null
     private var TIME_OUT = 10 * 1000L //10s
     private val exception = CoroutineExceptionHandler { _, throwable ->
         Log.e(TAG, throwable.message.toString())
-    }
-
-    interface OnShowAdCompleteListener {
-        fun onShowAdComplete()
     }
 
     fun showAdIfAvailable(
@@ -37,7 +34,7 @@ object AppOpenManager {
         onShowAdCompleteListener: OnShowAdCompleteListener
     ) {
         if (!AdmobUtils.isShowAds) {
-            onShowAdCompleteListener.onShowAdComplete()
+            onShowAdCompleteListener.onShowAdComplete(appOpenAd)
             return
         }
         val dialogLoadingAd = DialogLoadingAd()
@@ -46,18 +43,18 @@ object AppOpenManager {
         /**/
         val job = CoroutineScope(Dispatchers.Main + exception).launch {
             delay(TIME_OUT)
-            onShowAdCompleteListener.onShowAdComplete()
+            onShowAdCompleteListener.onShowAdComplete(appOpenAd)
         }
         val fullScreenContentCallback: FullScreenContentCallback =
             object : FullScreenContentCallback() {
                 override fun onAdDismissedFullScreenContent() {
-                    onShowAdCompleteListener.onShowAdComplete()
+                    onShowAdCompleteListener.onShowAdComplete(appOpenAd)
                     Log.d(TAG, "onAdDismissedFullScreenContent")
                 }
 
                 override fun onAdFailedToShowFullScreenContent(adError: AdError) {
                     dismissDialog(dialogLoadingAd)
-                    onShowAdCompleteListener.onShowAdComplete()
+                    onShowAdCompleteListener.onShowAdComplete(appOpenAd)
                     job.cancel()
                     Log.d(TAG, "onAdFailedToShowFullScreenContent: ${adError.message}")
                 }
@@ -71,6 +68,7 @@ object AppOpenManager {
 
         val loadCallback = object : AppOpenAdLoadCallback() {
             override fun onAdLoaded(ad: AppOpenAd) {
+                appOpenAd = ad
                 ad.fullScreenContentCallback = fullScreenContentCallback
                 if (showDialogLoading) {
                     dialogLoadingAd.show(
@@ -87,7 +85,7 @@ object AppOpenManager {
             }
 
             override fun onAdFailedToLoad(loadAdError: LoadAdError) {
-                onShowAdCompleteListener.onShowAdComplete()
+                onShowAdCompleteListener.onShowAdComplete(appOpenAd)
                 job.cancel()
                 Log.d(TAG, "onAdFailedToLoad: ${loadAdError.message}")
             }
@@ -97,7 +95,7 @@ object AppOpenManager {
             idAd = AdmobUtils.APP_OPEN
         }
         if (AdInterstitial.isShowedFullScreen) {
-            onShowAdCompleteListener.onShowAdComplete()
+            onShowAdCompleteListener.onShowAdComplete(appOpenAd)
         } else {
             AppOpenAd.load(mActivity, idAd, adRequest, loadCallback)
         }
