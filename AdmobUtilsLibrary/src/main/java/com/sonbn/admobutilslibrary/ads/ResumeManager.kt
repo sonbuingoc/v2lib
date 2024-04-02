@@ -23,19 +23,9 @@ import java.util.Date
 
 private const val TAG = "ResumeAdManager"
 
-class ResumeManager {
-    companion object {
-        private var instance: ResumeManager? = null
-        fun getInstance(): ResumeManager {
-            if (instance == null) instance = ResumeManager()
-            return instance!!
-        }
-
-    }
-
+object ResumeManager {
     private var mActivityRef: WeakReference<Activity>? = null
     private var set = mutableSetOf<Class<*>?>()
-    //    private var mActivity: Activity? = null
     private var isShowingAd = false
     private var appOpenAd: AppOpenAd? = null
     private var loadTime: Long = 0
