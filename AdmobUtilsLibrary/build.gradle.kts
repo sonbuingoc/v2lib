@@ -51,16 +51,3 @@ dependencies {
     implementation("com.facebook.shimmer:shimmer:0.5.0@aar")
     implementation("com.google.android.play:review-ktx:2.0.1")
 }
-
-afterEvaluate {
-    publishing {
-        publications {
-            create<MavenPublication>("maven") {
-                from(components["java"])
-                groupId = "com.github.sonbuingoc:AdmobUtilsLibrary"
-                artifactId = "com.sonbn.admobutilslibrary"
-                version = "1.0.0"
-            }
-        }
-    }
-}
