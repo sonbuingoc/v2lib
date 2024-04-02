@@ -2,7 +2,8 @@
 
 
 #Step1. 
-```repositories {
+```
+repositories {
 	maven { url 'https://jitpack.io' }
 }
 ```
