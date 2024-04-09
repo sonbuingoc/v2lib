@@ -133,14 +133,10 @@ object AdInterstitial {
                 DialogLoadingAd::class.simpleName
             )
             android.os.Handler(Looper.getMainLooper())
-                .postDelayed({ map[id]?.show(mActivity) }, 3000)
+                .postDelayed({ map[id]?.show(mActivity) }, 2000)
         } else {
             map[id]?.show(mActivity)
         }
-
-    }
-
-    fun loadAndShowInterstitial() {
 
     }
 

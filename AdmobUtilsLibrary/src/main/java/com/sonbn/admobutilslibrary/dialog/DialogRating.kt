@@ -1,5 +1,6 @@
 package com.sonbn.admobutilslibrary.dialog
 
+import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -9,6 +10,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.animation.AnimationUtils
+import androidx.core.content.ContextCompat.startActivity
 import androidx.fragment.app.DialogFragment
 import com.google.android.play.core.review.ReviewManagerFactory
 import com.sonbn.admobutilslibrary.R
@@ -18,6 +20,7 @@ class DialogRating() : DialogFragment() {
     private var _binding: DialogRatingBinding? = null
     private val binding get() = _binding!!
     private lateinit var ctx: Context
+    private lateinit var mActivity: Activity
     private var star = 4
 
     var feedbackEmail: String = ""
@@ -30,6 +33,7 @@ class DialogRating() : DialogFragment() {
     override fun onAttach(context: Context) {
         super.onAttach(context)
         ctx = context
+        mActivity = requireActivity()
     }
 
     override fun onStart() {
@@ -70,13 +74,17 @@ class DialogRating() : DialogFragment() {
     }
 
     private fun onClickRate() {
-        if (star >= 4) {
-            reviewInApp()
-        } else {
-            feedback()
+        try {
+            if (star >= 4) {
+                reviewInApp()
+            } else {
+                feedback()
+            }
+            mCallback?.onClickRate(star)
+            dismiss()
+        } catch (e: Throwable) {
+            /**/
         }
-        mCallback?.onClickRate(star)
-        dismiss()
     }
 
     private fun setupStar(number: Int) {
@@ -110,12 +118,12 @@ class DialogRating() : DialogFragment() {
             if (task.isSuccessful) {
                 // We got the ReviewInfo object
                 val reviewInfo = task.result
-                val flow = reviewManager.launchReviewFlow(requireActivity(), reviewInfo)
+                val flow = reviewManager.launchReviewFlow(mActivity, reviewInfo)
                 flow.addOnCompleteListener { _ ->
 
                 }
             } else {
-                requireActivity().runOnUiThread {
+                mActivity.runOnUiThread {
                     rating()
                 }
             }
