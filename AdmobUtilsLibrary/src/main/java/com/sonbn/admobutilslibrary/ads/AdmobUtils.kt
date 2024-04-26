@@ -3,6 +3,8 @@ package com.sonbn.admobutilslibrary.ads
 import android.content.Context
 import android.net.ConnectivityManager
 import com.google.android.gms.ads.MobileAds
+import com.google.android.gms.ads.RequestConfiguration
+import com.google.android.gms.ads.RequestConfiguration.MAX_AD_CONTENT_RATING_G
 import kotlinx.coroutines.CoroutineExceptionHandler
 
 
@@ -19,6 +21,12 @@ object AdmobUtils {
     fun initMobileAds(context: Context, isShowAds: Boolean, isDebug: Boolean) {
         AdmobUtils.isDebug = isDebug
         AdmobUtils.isShowAds = isShowAds
+
+        val conf = RequestConfiguration.Builder()
+            .setMaxAdContentRating(MAX_AD_CONTENT_RATING_G)
+            .build()
+
+        MobileAds.setRequestConfiguration(conf)
         MobileAds.initialize(context) { }
     }
 
