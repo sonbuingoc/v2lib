@@ -18,11 +18,20 @@ import com.google.android.gms.ads.nativead.NativeAdView
 import com.sonbn.admobutilslibrary.R
 import com.sonbn.admobutilslibrary.databinding.ShimmerNativeMediumBinding
 import com.sonbn.admobutilslibrary.databinding.ShimmerNativeSmallBinding
+import com.sonbn.admobutilslibrary.gone
+import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 
 private const val TAG = "AdNative"
 
 object AdNative {
+    private val exceptionHandler = CoroutineExceptionHandler { _, _ -> }
+    private const val TIME_OUT = 60 * 1000L
     private val map = mutableMapOf<String, NativeAd>()
     interface Callback{
         fun onAdLoaded(nativeAd: NativeAd?)
@@ -48,11 +57,12 @@ object AdNative {
         callback: Callback? = null
     ) {
         var nativeId = id
+        var isLoaded = false
         if (AdmobUtils.isDebug) {
             nativeId = AdmobUtils.NATIVE
         }
         if (!AdmobUtils.isShowAds || !AdmobUtils.isNetworkAvailable(activity)) {
-            viewGroup.visibility = View.GONE
+            viewGroup.gone()
             return
         }
         val layoutShimmer = ShimmerNativeSmallBinding.inflate(LayoutInflater.from(activity)).root
@@ -62,11 +72,21 @@ object AdNative {
         var layout = idLayout
         if (layout == null) layout = R.layout.gnt_small_template_view
         val builder = AdLoader.Builder(activity, nativeId).forNativeAd { p0 ->
+            isLoaded = true
             layoutShimmer.stopShimmer()
             showNative(activity, id, p0, viewGroup, layout)
             callback?.onAdLoaded(p0)
         }.build()
         builder.loadAd(AdRequest.Builder().build())
+
+//        CoroutineScope(Dispatchers.IO + exceptionHandler).launch {
+//            delay(TIME_OUT)
+//            if (!isLoaded) {
+//                withContext(Dispatchers.Main + exceptionHandler) {
+//                    viewGroup.gone()
+//                }
+//            }
+//        }
     }
 
     fun loadAndShowNativeMedium(
@@ -77,11 +97,13 @@ object AdNative {
         callback: Callback?
     ) {
         var nativeId = id
+        var isLoaded = false
+
         if (AdmobUtils.isDebug) {
             nativeId = AdmobUtils.NATIVE
         }
         if (!AdmobUtils.isShowAds || !AdmobUtils.isNetworkAvailable(activity)) {
-            viewGroup.visibility = View.GONE
+            viewGroup.gone()
             return
         }
         val layoutShimmer = ShimmerNativeMediumBinding.inflate(LayoutInflater.from(activity)).root
@@ -91,11 +113,21 @@ object AdNative {
         var layout = idLayout
         if (layout == null) layout = R.layout.gnt_medium_template_view
         val builder = AdLoader.Builder(activity, nativeId).forNativeAd { p0 ->
+            isLoaded = true
             layoutShimmer.stopShimmer()
             showNative(activity, id, p0, viewGroup, layout)
             callback?.onAdLoaded(p0)
         }.build()
         builder.loadAd(AdRequest.Builder().build())
+
+//        CoroutineScope(Dispatchers.IO + exceptionHandler).launch {
+//            delay(TIME_OUT)
+//            if (!isLoaded) {
+//                withContext(Dispatchers.Main + exceptionHandler) {
+//                    viewGroup.gone()
+//                }
+//            }
+//        }
     }
 
     private fun showNative(
