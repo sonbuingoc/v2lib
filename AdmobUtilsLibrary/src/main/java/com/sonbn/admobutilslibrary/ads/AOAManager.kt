@@ -18,11 +18,18 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-private const val TAG = "AOAManager"
+class AOAManager {
+    companion object {
+        private const val TAG = "AOAManager"
+        private var TIME_OUT = 20 * 1000L //10s
+        private var instance: AOAManager? = null
+        fun getInstance(): AOAManager {
+            if (instance == null) instance = AOAManager()
+            return instance!!
+        }
+    }
 
-object AppOpenManager {
     private var appOpenAd: AppOpenAd? = null
-    private var TIME_OUT = 10 * 1000L //10s
     private val exception = CoroutineExceptionHandler { _, throwable ->
         Log.e(TAG, throwable.message.toString())
     }
@@ -31,6 +38,7 @@ object AppOpenManager {
         mActivity: Activity,
         id: String,
         showDialogLoading: Boolean = true,
+        timeOut: Long = TIME_OUT,
         onShowAdCompleteListener: OnShowAdCompleteListener
     ) {
         if (!AdmobUtils.isShowAds) {
@@ -42,7 +50,7 @@ object AppOpenManager {
 
         /**/
         val job = CoroutineScope(Dispatchers.Main + exception).launch {
-            delay(TIME_OUT)
+            delay(timeOut)
             onShowAdCompleteListener.onShowAdComplete(appOpenAd)
         }
         val fullScreenContentCallback: FullScreenContentCallback =
@@ -94,7 +102,7 @@ object AppOpenManager {
         if (AdmobUtils.isDebug) {
             idAd = AdmobUtils.APP_OPEN
         }
-        if (AdInterstitial.isShowedFullScreen) {
+        if (AdInterstitial.showedFullScreen) {
             onShowAdCompleteListener.onShowAdComplete(appOpenAd)
         } else {
             AppOpenAd.load(mActivity, idAd, adRequest, loadCallback)

@@ -2,8 +2,6 @@ package com.sonbn.admobutilslibrary.ads
 
 import android.app.Activity
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.util.DisplayMetrics
 import android.view.LayoutInflater
 import android.view.View
@@ -21,14 +19,20 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 
-object AdBanner {
-    private const val TIME_OUT = 60 * 1000L
+class AdBanner {
+    companion object {
+        private var instance: AdBanner? = null
+        fun getInstance(): AdBanner {
+            if (instance == null) instance = AdBanner()
+            return instance!!
+        }
+    }
+
     private val exceptionHandler = CoroutineExceptionHandler { _, _ -> }
 
-    interface Callback {
+    interface AdBannerCallback {
         fun onAdLoaded(adView: AdView?)
     }
 
@@ -37,7 +41,8 @@ object AdBanner {
         id: String,
         frameLayout: FrameLayout,
         line: View,
-        mCallback: Callback? = null
+        timeOut: Long? = null, /*time millis*/
+        mAdBannerCallback: AdBannerCallback? = null
     ) {
         var isLoaded = false
         if (!AdmobUtils.isNetworkAvailable(mActivity) || !AdmobUtils.isShowAds) {
@@ -65,25 +70,27 @@ object AdBanner {
                 frameLayout.removeAllViews()
                 frameLayout.addView(mAdView)
                 isLoaded = true
-                mCallback?.onAdLoaded(mAdView)
+                mAdBannerCallback?.onAdLoaded(mAdView)
             }
         }
-//        CoroutineScope(Dispatchers.IO + exceptionHandler).launch {
-//            delay(TIME_OUT)
-//            if (!isLoaded) {
-//                withContext(Dispatchers.Main + exceptionHandler) {
-//                    frameLayout.gone()
-//                    line.gone()
-//                }
-//            }
-//        }
+        timeOut?.let {
+            CoroutineScope(Dispatchers.Main + exceptionHandler).launch {
+                delay(it)
+                if (!isLoaded) {
+                    frameLayout.gone()
+                    line.gone()
+                }
+            }
+        }
     }
 
     fun showBannerCollapsible(
         mActivity: Activity,
         id: String,
         frameLayout: FrameLayout,
-        line: View
+        line: View,
+        timeOut: Long? = null, /*time millis*/
+        mAdBannerCallback: AdBannerCallback? = null
     ) {
         var isLoaded = false
         if (!AdmobUtils.isNetworkAvailable(mActivity) || !AdmobUtils.isShowAds) {
@@ -115,17 +122,18 @@ object AdBanner {
                 frameLayout.removeAllViews()
                 frameLayout.addView(mAdView)
                 isLoaded = true
+                mAdBannerCallback?.onAdLoaded(mAdView)
             }
         }
-//        CoroutineScope(Dispatchers.IO + exceptionHandler).launch {
-//            delay(TIME_OUT)
-//            if (!isLoaded) {
-//                withContext(Dispatchers.Main + exceptionHandler) {
-//                    frameLayout.gone()
-//                    line.gone()
-//                }
-//            }
-//        }
+        timeOut?.let {
+            CoroutineScope(Dispatchers.Main + exceptionHandler).launch {
+                delay(it)
+                if (!isLoaded) {
+                    frameLayout.gone()
+                    line.gone()
+                }
+            }
+        }
     }
 
     private fun getAdSize(mActivity: Activity): AdSize {

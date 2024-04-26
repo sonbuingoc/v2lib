@@ -1,80 +1,79 @@
 package com.sonbn.admobutilslibrary.ads
 
 import android.app.Activity
-import android.content.Context
 import android.os.Looper
 import android.os.SystemClock
 import android.util.Log
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.FragmentActivity
-import com.sonbn.admobutilslibrary.dialog.DialogLoadingAd
 import com.google.android.gms.ads.AdError
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.FullScreenContentCallback
 import com.google.android.gms.ads.LoadAdError
-import com.google.android.gms.ads.interstitial.InterstitialAd
-import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback
+import com.google.android.gms.ads.rewarded.RewardedAd
+import com.google.android.gms.ads.rewarded.RewardedAdLoadCallback
+import com.sonbn.admobutilslibrary.dialog.DialogLoadingAd
 import kotlin.random.Random
 
 
-class AdInterstitial {
-    private val map = mutableMapOf<String, InterstitialAd?>()
+class AdReward {
+    private val map = mutableMapOf<String, RewardedAd?>()
     private var startTimeShow = 0L
     private var frequencyCapping = 0
     private var interstitialPercent = 100
 
     companion object {
         var showedFullScreen = false
-        private const val TAG = "AdInterstitial"
-        private var instance: AdInterstitial? = null
-        fun getInstance(): AdInterstitial {
-            if (instance == null) instance = AdInterstitial()
+        private var instance: AdReward? = null
+        private const val TAG = "AdReward"
+        fun getInstance(): AdReward {
+            if (instance == null) instance = AdReward()
             return instance!!
         }
+    }
+
+    interface AdRewardCallback {
+        fun onCallback()
+        fun onLoaded(ad: RewardedAd)
+        fun rewardItem(rewardAmount: Int, rewardType: String)
     }
 
     fun setFrequencyCapping(value: Int) {
         frequencyCapping = value
     }
 
-    fun setInterstitialPercent(value: Int) {
+    fun setPercentShowReward(value: Int) {
         interstitialPercent = value
     }
 
-    fun loadInterstitial(mContext: Context, id: String) {
-        if (!AdmobUtils.isShowAds) {
-            return
-        }
-        var idInter = id
+    fun loadReward(activity: Activity, id: String) {
+        var rewardId = id
         if (AdmobUtils.isDebug) {
-            idInter = AdmobUtils.INTERSTITIAL
+            rewardId = AdmobUtils.REWARD
         }
         val adRequest: AdRequest = AdRequest.Builder().build()
-        InterstitialAd.load(mContext, idInter, adRequest,
-            object : InterstitialAdLoadCallback() {
-                override fun onAdLoaded(interstitialAd: InterstitialAd) {
-                    // The mInterstitialAd reference will be null until
-                    // an ad is loaded.
-                    if (map[id] == null) {
-                        map[id] = interstitialAd
-                    }
-                    Log.i(TAG, "onAdLoaded")
-                }
-
+        RewardedAd.load(activity, rewardId,
+            adRequest, object : RewardedAdLoadCallback() {
                 override fun onAdFailedToLoad(loadAdError: LoadAdError) {
-                    // Handle the error
+                    // Handle the error.
                     Log.d(TAG, loadAdError.toString())
                     map[id] = null
-                    Log.i(TAG, "onAdFailedToLoad")
+                }
+
+                override fun onAdLoaded(ad: RewardedAd) {
+                    if (map[id] == null) {
+                        map[id] = ad
+                    }
+                    Log.d(TAG, "Ad was loaded.")
                 }
             })
     }
 
-    fun showInterstitial(
+    fun showReward(
         mActivity: Activity,
         id: String,
         showDialogLoading: Boolean = true,
-        callback: AdInterstitialCallback
+        callback: AdRewardCallback
     ) {
         if (!AdmobUtils.isShowAds) {
             callback.onCallback()
@@ -82,14 +81,14 @@ class AdInterstitial {
         }
         if (map[id] == null) {
             callback.onCallback()
-            loadInterstitial(mActivity, id)
+            loadReward(mActivity, id)
             return
         }
-        callback.onAdLoaded(map[id])
+        callback.onLoaded(map[id]!!)
         val dialogLoadingAd = DialogLoadingAd()
         val fragmentActivity = mActivity as FragmentActivity
 
-        map[id]?.fullScreenContentCallback = object : FullScreenContentCallback() {
+        map[id]!!.fullScreenContentCallback = object : FullScreenContentCallback() {
             override fun onAdClicked() {
                 // Called when a click is recorded for an ad.
                 Log.d(TAG, "Ad was clicked.")
@@ -97,23 +96,20 @@ class AdInterstitial {
 
             override fun onAdDismissedFullScreenContent() {
                 // Called when ad is dismissed.
+                // Set the ad reference to null so you don't show the ad a second time.
                 Log.d(TAG, "Ad dismissed fullscreen content.")
-                showedFullScreen = false
                 map[id] = null
                 callback.onCallback()
-                loadInterstitial(mActivity, id)
-                startTimeShow = SystemClock.elapsedRealtime()
+                showedFullScreen = false
             }
 
-            override fun onAdFailedToShowFullScreenContent(p0: AdError) {
+            override fun onAdFailedToShowFullScreenContent(adError: AdError) {
                 // Called when ad fails to show.
                 Log.e(TAG, "Ad failed to show fullscreen content.")
-                showedFullScreen = false
                 map[id] = null
                 callback.onCallback()
-                loadInterstitial(mActivity, id)
+                showedFullScreen = false
                 dismissDialog(dialogLoadingAd)
-                startTimeShow = SystemClock.elapsedRealtime()
             }
 
             override fun onAdImpression() {
@@ -123,9 +119,9 @@ class AdInterstitial {
 
             override fun onAdShowedFullScreenContent() {
                 // Called when ad is shown.
+                Log.d(TAG, "Ad showed fullscreen content.")
                 showedFullScreen = true
                 dismissDialog(dialogLoadingAd)
-                Log.d(TAG, "Ad showed fullscreen content.")
             }
         }
 
@@ -141,11 +137,22 @@ class AdInterstitial {
                 DialogLoadingAd::class.simpleName
             )
             android.os.Handler(Looper.getMainLooper())
-                .postDelayed({ map[id]?.show(mActivity) }, 2000)
+                .postDelayed({
+                    map[id]?.show(mActivity) { rewardItem -> // Handle the reward.
+                        Log.d(TAG, "The user earned the reward.")
+                        val rewardAmount = rewardItem.amount
+                        val rewardType = rewardItem.type
+                        callback.rewardItem(rewardAmount, rewardType)
+                    }
+                }, 2000)
         } else {
-            map[id]?.show(mActivity)
+            map[id]?.show(mActivity) { rewardItem -> // Handle the reward.
+                Log.d(TAG, "The user earned the reward.")
+                val rewardAmount = rewardItem.amount
+                val rewardType = rewardItem.type
+                callback.rewardItem(rewardAmount, rewardType)
+            }
         }
-
     }
 
     private fun dismissDialog(dialog: DialogFragment) {
@@ -157,10 +164,4 @@ class AdInterstitial {
             Log.e(TAG, e.message.toString())
         }
     }
-
-    interface AdInterstitialCallback {
-        fun onCallback()
-        fun onAdLoaded(interstitialAd: InterstitialAd?)
-    }
-
 }

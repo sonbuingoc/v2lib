@@ -21,9 +21,17 @@ import com.google.android.gms.ads.appopen.AppOpenAd.AppOpenAdLoadCallback
 import java.lang.ref.WeakReference
 import java.util.Date
 
-private const val TAG = "ResumeAdManager"
 
-object ResumeManager {
+class ResumeManager {
+    companion object {
+        private const val TAG = "ResumeAdManager"
+        private var instance: ResumeManager? = null
+        fun getInstance(): ResumeManager {
+            if (instance == null) instance = ResumeManager()
+            return instance!!
+        }
+    }
+
     private var mActivityRef: WeakReference<Activity>? = null
     private var set = mutableSetOf<Class<*>?>()
     private var isShowingAd = false
@@ -100,7 +108,7 @@ object ResumeManager {
 
     }
 
-    fun fetchAd() {
+    private fun fetchAd() {
         if (isLoadingAd || isAdAvailable) {
             return
         }
@@ -193,7 +201,7 @@ object ResumeManager {
 
     private fun available(): Boolean {
         if (appOpenAd == null || getActivity() == null) return false
-        if (AdInterstitial.isShowedFullScreen) return false
+        if (AdInterstitial.showedFullScreen || AdReward.showedFullScreen) return false
         if (set.indexOf(getActivity()!!::class.java) != -1) return false
         return true
     }

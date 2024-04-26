@@ -10,7 +10,6 @@ import com.google.android.ump.ConsentInformation
 import com.google.android.ump.ConsentRequestParameters
 import com.google.android.ump.UserMessagingPlatform
 
-private const val TAG = "GDPRManager"
 
 class GDPRManager(mActivity: Activity) {
     private val prefs: SharedPreferences
@@ -18,6 +17,7 @@ class GDPRManager(mActivity: Activity) {
     var mCallback: Callback? = null
 
     companion object {
+        private const val TAG = "GDPRManager"
         private var instance: GDPRManager? = null
         fun getInstance(activity: Activity): GDPRManager {
             if (instance == null) {

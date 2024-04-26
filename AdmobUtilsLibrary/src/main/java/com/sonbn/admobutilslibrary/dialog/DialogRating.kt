@@ -23,12 +23,16 @@ class DialogRating() : DialogFragment() {
     private lateinit var mActivity: Activity
     private var star = 4
 
-    var feedbackEmail: String = ""
-    var appName: String = ""
-    var versionCode: String = ""
-    var versionName: String = ""
-
     var mCallback: Callback? = null
+
+    var feedbackModel: FeedbackModel = FeedbackModel()
+
+    data class FeedbackModel(
+        var feedbackEmail: String = "",
+        var appName: String = "",
+        var versionCode: String = "",
+        var versionName: String = ""
+    )
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
@@ -131,16 +135,18 @@ class DialogRating() : DialogFragment() {
     }
 
     private fun feedback() {
-        val appInfo =
-            "App: $appName versionCode: $versionCode versionName: $versionName device: ${Build.MODEL} sdk: ${Build.VERSION.SDK}"
-        val email = Intent(Intent.ACTION_SENDTO)
-        email.putExtra(
-            Intent.EXTRA_EMAIL,
-            arrayOf(feedbackEmail)
-        )
-        email.putExtra(Intent.EXTRA_SUBJECT, appInfo)
-        email.data = Uri.parse("mailto:")
-        startActivity(Intent.createChooser(email, appInfo))
+        feedbackModel.apply {
+            val appInfo =
+                "App: $appName versionCode: $versionCode versionName: $versionName device: ${Build.MODEL} sdk: ${Build.VERSION.SDK}"
+            val email = Intent(Intent.ACTION_SENDTO)
+            email.putExtra(
+                Intent.EXTRA_EMAIL,
+                arrayOf(feedbackEmail)
+            )
+            email.putExtra(Intent.EXTRA_SUBJECT, appInfo)
+            email.data = Uri.parse("mailto:")
+            startActivity(Intent.createChooser(email, appInfo))
+        }
     }
 
     private fun rating() {

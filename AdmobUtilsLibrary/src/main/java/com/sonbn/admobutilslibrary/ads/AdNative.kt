@@ -24,18 +24,25 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 
-private const val TAG = "AdNative"
-
-object AdNative {
+class AdNative {
     private val exceptionHandler = CoroutineExceptionHandler { _, _ -> }
-    private const val TIME_OUT = 60 * 1000L
     private val map = mutableMapOf<String, NativeAd>()
-    interface Callback{
+
+    companion object {
+        private const val TAG = "AdNative"
+        private var instance: AdNative? = null
+        fun getInstance(): AdNative {
+            if (instance == null) instance = AdNative()
+            return instance!!
+        }
+    }
+
+    interface AdNativeCallback {
         fun onAdLoaded(nativeAd: NativeAd?)
     }
+
     fun loadNative(activity: Activity, id: String) {
         var nativeId = id
         if (AdmobUtils.isDebug) {
@@ -54,7 +61,8 @@ object AdNative {
         id: String,
         viewGroup: ViewGroup,
         idLayout: Int? = null,
-        callback: Callback? = null
+        timeOut: Long? = null,
+        adNativeCallback: AdNativeCallback? = null
     ) {
         var nativeId = id
         var isLoaded = false
@@ -75,18 +83,18 @@ object AdNative {
             isLoaded = true
             layoutShimmer.stopShimmer()
             showNative(activity, id, p0, viewGroup, layout)
-            callback?.onAdLoaded(p0)
+            adNativeCallback?.onAdLoaded(p0)
         }.build()
         builder.loadAd(AdRequest.Builder().build())
 
-//        CoroutineScope(Dispatchers.IO + exceptionHandler).launch {
-//            delay(TIME_OUT)
-//            if (!isLoaded) {
-//                withContext(Dispatchers.Main + exceptionHandler) {
-//                    viewGroup.gone()
-//                }
-//            }
-//        }
+        timeOut?.let {
+            CoroutineScope(Dispatchers.Main + exceptionHandler).launch {
+                delay(it)
+                if (!isLoaded) {
+                    viewGroup.gone()
+                }
+            }
+        }
     }
 
     fun loadAndShowNativeMedium(
@@ -94,7 +102,8 @@ object AdNative {
         id: String,
         viewGroup: ViewGroup,
         idLayout: Int? = null,
-        callback: Callback?
+        timeOut: Long? = null,
+        adNativeCallback: AdNativeCallback? = null
     ) {
         var nativeId = id
         var isLoaded = false
@@ -116,21 +125,21 @@ object AdNative {
             isLoaded = true
             layoutShimmer.stopShimmer()
             showNative(activity, id, p0, viewGroup, layout)
-            callback?.onAdLoaded(p0)
+            adNativeCallback?.onAdLoaded(p0)
         }.build()
         builder.loadAd(AdRequest.Builder().build())
 
-//        CoroutineScope(Dispatchers.IO + exceptionHandler).launch {
-//            delay(TIME_OUT)
-//            if (!isLoaded) {
-//                withContext(Dispatchers.Main + exceptionHandler) {
-//                    viewGroup.gone()
-//                }
-//            }
-//        }
+        timeOut?.let {
+            CoroutineScope(Dispatchers.Main + exceptionHandler).launch {
+                delay(it)
+                if (!isLoaded) {
+                    viewGroup.gone()
+                }
+            }
+        }
     }
 
-    private fun showNative(
+    fun showNative(
         activity: Activity,
         id: String,
         nativeAd: NativeAd? = null,
