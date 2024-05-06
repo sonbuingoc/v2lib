@@ -18,6 +18,7 @@ import com.google.android.gms.ads.FullScreenContentCallback
 import com.google.android.gms.ads.LoadAdError
 import com.google.android.gms.ads.appopen.AppOpenAd
 import com.google.android.gms.ads.appopen.AppOpenAd.AppOpenAdLoadCallback
+import com.sonbn.admobutilslibrary.runTryCatch
 import java.lang.ref.WeakReference
 import java.util.Date
 
@@ -103,7 +104,7 @@ class ResumeManager {
         }
 
         override fun onActivityDestroyed(p0: Activity) {
-            setActivity(null)
+//            setActivity(null)
         }
 
     }
@@ -155,7 +156,11 @@ class ResumeManager {
         }
 
         val dialogLoadingAd = DialogLoadingAd()
-        val fragmentActivity = getActivity() as FragmentActivity
+        var fragmentActivity: FragmentActivity? = null
+        runTryCatch {
+            fragmentActivity = getActivity() as FragmentActivity
+        }
+
 
         val fullScreenContentCallback: FullScreenContentCallback =
             object : FullScreenContentCallback() {
@@ -185,13 +190,19 @@ class ResumeManager {
 
         if (available()) {
             appOpenAd!!.fullScreenContentCallback = fullScreenContentCallback
-            if (showDialogLoading) {
+            if (showDialogLoading && fragmentActivity != null) {
                 dialogLoadingAd.show(
-                    fragmentActivity.supportFragmentManager,
+                    fragmentActivity!!.supportFragmentManager,
                     DialogLoadingAd::class.simpleName
                 )
                 Handler(Looper.getMainLooper())
-                    .postDelayed({ appOpenAd!!.show(getActivity()!!) }, 3000)
+                    .postDelayed({
+                        runTryCatch {
+                            if (getActivity() != null && appOpenAd != null) {
+                                appOpenAd!!.show(getActivity()!!)
+                            }
+                        }
+                    }, 2000L)
             } else {
                 appOpenAd!!.show(getActivity()!!)
             }

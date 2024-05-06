@@ -24,7 +24,6 @@ class DialogRating() : DialogFragment() {
     private var star = 4
 
     var mCallback: Callback? = null
-
     var feedbackModel: FeedbackModel = FeedbackModel()
 
     data class FeedbackModel(
@@ -72,8 +71,13 @@ class DialogRating() : DialogFragment() {
             imgStar4.setOnClickListener { setupStar(4) }
             imgStar5.setOnClickListener { setupStar(5) }
 
-            btnCancel.setOnClickListener { dismiss() }
-            btnRate.setOnClickListener { onClickRate() }
+            btnCancel.setOnClickListener {
+                dismiss()
+                mCallback?.onClickCancel()
+            }
+            btnRate.setOnClickListener {
+                onClickRate()
+            }
         }
     }
 
@@ -170,5 +174,6 @@ class DialogRating() : DialogFragment() {
 
     interface Callback {
         fun onClickRate(star: Int)
+        fun onClickCancel()
     }
 }
