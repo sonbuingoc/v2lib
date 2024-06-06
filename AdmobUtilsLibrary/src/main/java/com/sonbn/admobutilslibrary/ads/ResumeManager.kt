@@ -3,71 +3,42 @@ package com.sonbn.admobutilslibrary.ads
 import android.app.Activity
 import android.app.Application
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.util.Log
-import androidx.fragment.app.DialogFragment
-import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
-import com.sonbn.admobutilslibrary.dialog.DialogLoadingAd
 import com.google.android.gms.ads.AdError
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.FullScreenContentCallback
 import com.google.android.gms.ads.LoadAdError
 import com.google.android.gms.ads.appopen.AppOpenAd
 import com.google.android.gms.ads.appopen.AppOpenAd.AppOpenAdLoadCallback
-import com.sonbn.admobutilslibrary.runTryCatch
+import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.lang.ref.WeakReference
 import java.util.Date
 
 
-class ResumeManager {
-    companion object {
-        private const val TAG = "ResumeAdManager"
-        private var instance: ResumeManager? = null
-        fun getInstance(): ResumeManager {
-            if (instance == null) instance = ResumeManager()
-            return instance!!
-        }
+object ResumeManager {
+    private const val TAG = "ResumeManager"
+
+    interface ResumeListener {
+        fun onFetchAd()
+        fun onAdLoaded(appOpenAd: AppOpenAd)
+        fun onAdFailedToLoad(adError: LoadAdError?)
+        fun onAdShowedFullScreenContent()
+        fun onAdFailedToShowFullScreenContent(adError: AdError?)
     }
 
-    private var mActivityRef: WeakReference<Activity>? = null
+    private var resumeListener: ResumeListener? = null
+    fun setResumeListener(resumeListener: ResumeListener?) {
+        this.resumeListener = resumeListener
+    }
+
     private var set = mutableSetOf<Class<*>?>()
-    private var isShowingAd = false
-    private var appOpenAd: AppOpenAd? = null
-    private var loadTime: Long = 0
-    private var loadCallback: AppOpenAdLoadCallback? = null
-    private var isLoadingAd = false
-    private var mApplication: Application? = null
-    private var id: String = AdmobUtils.APP_OPEN
-    private var showDialogLoading = true
-    private var onShowAdCompleteListener: OnShowAdCompleteListener? = null
-    fun init(
-        application: Application,
-        id: String,
-        showDialogLoading: Boolean = true,
-        onShowAdCompleteListener: OnShowAdCompleteListener? = null
-    ) {
-        this.mApplication = application
-        this.id = id
-        this.showDialogLoading = showDialogLoading
-        this.onShowAdCompleteListener = onShowAdCompleteListener
-
-        application.registerActivityLifecycleCallbacks(activityLifecycleCallbacks)
-        ProcessLifecycleOwner.get().lifecycle.addObserver(defaultLifecycleObserver)
-        fetchAd()
-    }
-
-    private fun setActivity(activity: Activity?) {
-        mActivityRef = WeakReference(activity)
-    }
-
-    private fun getActivity(): Activity? {
-        return mActivityRef?.get()
-    }
-
     fun insertActivityDisableAd(activity: Class<*>) {
         set.add(activity)
     }
@@ -76,10 +47,48 @@ class ResumeManager {
         set.remove(activity)
     }
 
+    private var activityReference: WeakReference<Activity>? = null
+    private fun setActivity(activity: Activity) {
+        activityReference = WeakReference(activity)
+    }
+
+    private fun getActivity(): Activity? {
+        return activityReference?.get()
+    }
+
+    private var isShowingAd = false
+    private var resumeAd: AppOpenAd? = null
+    private var loadTime: Long = 0
+    private var loadCallback: AppOpenAdLoadCallback? = null
+    private var isLoadingAd = false
+    private var mApplication: Application? = null
+    private var id: String = AdmobUtils.APP_OPEN
+
+    fun init(application: Application, id: String) {
+        if (mApplication != null) {
+            return
+        }
+        this.mApplication = application
+        this.id = id
+
+        application.registerActivityLifecycleCallbacks(activityLifecycleCallbacks)
+        ProcessLifecycleOwner.get().lifecycle.addObserver(defaultLifecycleObserver)
+    }
+
     private val defaultLifecycleObserver = object : DefaultLifecycleObserver {
         override fun onStart(owner: LifecycleOwner) {
             super.onStart(owner)
             showAdIfAvailable()
+        }
+
+        //load ads when move to background
+        override fun onStop(owner: LifecycleOwner) {
+            super.onStop(owner)
+            CoroutineScope(Dispatchers.Main + CoroutineExceptionHandler { _, _ ->  }).launch {
+                //fetchAd after
+                delay(1000)
+                fetchAd()
+            }
         }
     }
     private val activityLifecycleCallbacks = object : Application.ActivityLifecycleCallbacks {
@@ -104,36 +113,36 @@ class ResumeManager {
         }
 
         override fun onActivityDestroyed(p0: Activity) {
-//            setActivity(null)
+//            mActivity = null
         }
 
     }
 
-    private fun fetchAd() {
+    fun fetchAd() {
         if (isLoadingAd || isAdAvailable) {
             return
         }
+        resumeListener?.onFetchAd()
         isLoadingAd = true
         loadCallback = object : AppOpenAdLoadCallback() {
-
             override fun onAdLoaded(ad: AppOpenAd) {
                 isLoadingAd = false
-                appOpenAd = ad
+                resumeAd = ad
                 loadTime = Date().time
                 Log.d(TAG, "onAdLoaded")
+                resumeListener?.onAdLoaded(ad)
             }
 
             override fun onAdFailedToLoad(loadAdError: LoadAdError) {
                 // Handle the error.
                 isLoadingAd = false
+                resumeListener?.onAdFailedToLoad(loadAdError)
                 Log.d(TAG, "onAdFailedToLoad: ${loadAdError.message}")
+
             }
         }
         val request = adRequest
-        var idAd = id
-        if (AdmobUtils.isDebug) {
-            idAd = AdmobUtils.APP_OPEN
-        }
+        val idAd = if (AdmobUtils.isDebug) AdmobUtils.APP_OPEN else id
         mApplication?.let {
             AppOpenAd.load(it, idAd, request, loadCallback!!)
         }
@@ -155,64 +164,42 @@ class ResumeManager {
             return
         }
 
-        val dialogLoadingAd = DialogLoadingAd()
-        var fragmentActivity: FragmentActivity? = null
-        runTryCatch {
-            fragmentActivity = getActivity() as FragmentActivity
-        }
-
-
         val fullScreenContentCallback: FullScreenContentCallback =
             object : FullScreenContentCallback() {
                 override fun onAdDismissedFullScreenContent() {
                     // Set the reference to null so isAdAvailable() returns false.
-                    appOpenAd = null
+                    resumeAd = null
                     isShowingAd = false
-                    fetchAd()
+//                    fetchAd()
                     Log.d(TAG, "onAdDismissedFullScreenContent")
                 }
 
                 override fun onAdFailedToShowFullScreenContent(adError: AdError) {
-                    dismissDialog(dialogLoadingAd)
-                    appOpenAd = null
+                    resumeAd = null
                     isShowingAd = false
-                    fetchAd()
+//                    fetchAd()
                     Log.d(TAG, "onAdFailedToShowFullScreenContent")
+                    resumeListener?.onAdFailedToShowFullScreenContent(adError)
                 }
 
                 override fun onAdShowedFullScreenContent() {
-                    onShowAdCompleteListener?.onShowAdComplete(appOpenAd)
-                    dismissDialog(dialogLoadingAd)
                     isShowingAd = true
+                    resumeListener?.onAdShowedFullScreenContent()
                     Log.d(TAG, "onAdShowedFullScreenContent")
                 }
             }
 
         if (available()) {
-            appOpenAd!!.fullScreenContentCallback = fullScreenContentCallback
-            if (showDialogLoading && fragmentActivity != null) {
-                dialogLoadingAd.show(
-                    fragmentActivity!!.supportFragmentManager,
-                    DialogLoadingAd::class.simpleName
-                )
-                Handler(Looper.getMainLooper())
-                    .postDelayed({
-                        runTryCatch {
-                            if (getActivity() != null && appOpenAd != null) {
-                                appOpenAd!!.show(getActivity()!!)
-                            }
-                        }
-                    }, 2000L)
-            } else {
-                appOpenAd!!.show(getActivity()!!)
-            }
+            resumeAd!!.fullScreenContentCallback = fullScreenContentCallback
+            resumeAd!!.show(getActivity()!!)
         }
 
     }
 
     private fun available(): Boolean {
-        if (appOpenAd == null || getActivity() == null) return false
-        if (AdInterstitial.showedFullScreen || AdReward.showedFullScreen) return false
+        if (!AdmobUtils.isForeground) return false
+        if (!isAdAvailable || getActivity() == null) return false
+        if (AdInterstitial.isShowedFullScreen) return false
         if (set.indexOf(getActivity()!!::class.java) != -1) return false
         return true
     }
@@ -227,15 +214,5 @@ class ResumeManager {
     }
 
     private val isAdAvailable: Boolean
-        get() = appOpenAd != null && wasLoadTimeLessThanNHoursAgo()
-
-    private fun dismissDialog(dialog: DialogFragment) {
-        try {
-            if (dialog.isAdded) {
-                dialog.dismiss()
-            }
-        } catch (e: Throwable) {
-            Log.e(TAG, e.message.toString())
-        }
-    }
+        get() = resumeAd != null && wasLoadTimeLessThanNHoursAgo()
 }

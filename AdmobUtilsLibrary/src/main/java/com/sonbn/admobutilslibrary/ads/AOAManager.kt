@@ -1,11 +1,7 @@
 package com.sonbn.admobutilslibrary.ads
 
 import android.app.Activity
-import android.os.Looper
 import android.util.Log
-import androidx.fragment.app.DialogFragment
-import androidx.fragment.app.FragmentActivity
-import com.sonbn.admobutilslibrary.dialog.DialogLoadingAd
 import com.google.android.gms.ads.AdError
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.FullScreenContentCallback
@@ -18,57 +14,57 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-class AOAManager {
-    companion object {
-        private const val TAG = "AOAManager"
-        private var TIME_OUT = 20 * 1000L //10s
-        private var instance: AOAManager? = null
-        fun getInstance(): AOAManager {
-            if (instance == null) instance = AOAManager()
-            return instance!!
-        }
-    }
-
-    private var appOpenAd: AppOpenAd? = null
+object AOAManager {
+    private const val TAG = "AOAManager"
+    private var TIME_OUT = 20 * 1000L //20s
     private val exception = CoroutineExceptionHandler { _, throwable ->
         Log.e(TAG, throwable.message.toString())
+    }
+    private var isTimeOutCall = false
+    private var timeoutJob = TIME_OUT
+    fun setTimeOut(time: Long) {
+        this.timeoutJob = time
+    }
+
+    interface AOAListener {
+        fun onAdLoaded(adOpenAd: AppOpenAd)
+        fun onAdFailedToLoad(loadAdError: LoadAdError)
+        fun onShowAdComplete()
+        fun onShowAdError(adError: AdError)
+        fun onNotAvailable()
+        fun onTimeout()
     }
 
     fun showAdIfAvailable(
         mActivity: Activity,
         id: String,
-        showDialogLoading: Boolean = true,
-        timeOut: Long = TIME_OUT,
-        onShowAdCompleteListener: OnShowAdCompleteListener
+        aoaListener: AOAListener
     ) {
         if (!AdmobUtils.isShowAds) {
-            onShowAdCompleteListener.onShowAdComplete(appOpenAd)
+            aoaListener.onNotAvailable()
             return
         }
-        val dialogLoadingAd = DialogLoadingAd()
-        val fragmentActivity = mActivity as FragmentActivity
-
         /**/
+        isTimeOutCall = false
         val job = CoroutineScope(Dispatchers.Main + exception).launch {
-            delay(timeOut)
-            onShowAdCompleteListener.onShowAdComplete(appOpenAd)
+            delay(timeoutJob)
+            isTimeOutCall = true
+            aoaListener.onTimeout()
         }
         val fullScreenContentCallback: FullScreenContentCallback =
             object : FullScreenContentCallback() {
                 override fun onAdDismissedFullScreenContent() {
-                    onShowAdCompleteListener.onShowAdComplete(appOpenAd)
+                    aoaListener.onShowAdComplete()
                     Log.d(TAG, "onAdDismissedFullScreenContent")
                 }
 
                 override fun onAdFailedToShowFullScreenContent(adError: AdError) {
-                    dismissDialog(dialogLoadingAd)
-                    onShowAdCompleteListener.onShowAdComplete(appOpenAd)
+                    aoaListener.onShowAdError(adError)
                     job.cancel()
                     Log.d(TAG, "onAdFailedToShowFullScreenContent: ${adError.message}")
                 }
 
                 override fun onAdShowedFullScreenContent() {
-                    dismissDialog(dialogLoadingAd)
                     job.cancel()
                     Log.d(TAG, "onAdShowedFullScreenContent")
                 }
@@ -76,50 +72,27 @@ class AOAManager {
 
         val loadCallback = object : AppOpenAdLoadCallback() {
             override fun onAdLoaded(ad: AppOpenAd) {
-                appOpenAd = ad
                 ad.fullScreenContentCallback = fullScreenContentCallback
-                if (showDialogLoading) {
-                    dialogLoadingAd.show(
-                        fragmentActivity.supportFragmentManager,
-                        DialogLoadingAd::class.simpleName
-                    )
-                    android.os.Handler(Looper.getMainLooper()).postDelayed({
-                        ad.show(mActivity)
-                    }, 3000)
-                } else {
+                if (!isTimeOutCall && AdmobUtils.isForeground) {
                     ad.show(mActivity)
+                }else{
+                    aoaListener.onNotAvailable()
                 }
                 Log.d(TAG, "onAdLoaded")
+                aoaListener.onAdLoaded(ad)
             }
 
             override fun onAdFailedToLoad(loadAdError: LoadAdError) {
-                onShowAdCompleteListener.onShowAdComplete(appOpenAd)
+                aoaListener.onAdFailedToLoad(loadAdError)
                 job.cancel()
                 Log.d(TAG, "onAdFailedToLoad: ${loadAdError.message}")
             }
         }
-        var idAd = id
-        if (AdmobUtils.isDebug) {
-            idAd = AdmobUtils.APP_OPEN
-        }
-        if (AdInterstitial.showedFullScreen) {
-            onShowAdCompleteListener.onShowAdComplete(appOpenAd)
-        } else {
-            AppOpenAd.load(mActivity, idAd, adRequest, loadCallback)
-        }
-
+        val idAd = if (AdmobUtils.isDebug) AdmobUtils.APP_OPEN else id
+        AppOpenAd.load(mActivity, idAd, adRequest, loadCallback)
     }
 
     private val adRequest: AdRequest
         get() = AdRequest.Builder().build()
 
-    private fun dismissDialog(dialog: DialogFragment) {
-        try {
-            if (dialog.isAdded) {
-                dialog.dismiss()
-            }
-        } catch (e: Throwable) {
-            Log.e(TAG, e.message.toString())
-        }
-    }
 }

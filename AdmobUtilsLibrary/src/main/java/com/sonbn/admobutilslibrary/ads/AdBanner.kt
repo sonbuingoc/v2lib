@@ -12,6 +12,7 @@ import com.google.android.gms.ads.AdListener
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdSize
 import com.google.android.gms.ads.AdView
+import com.google.android.gms.ads.LoadAdError
 import com.sonbn.admobutilslibrary.databinding.ShimmerBannerBinding
 import com.sonbn.admobutilslibrary.gone
 import kotlinx.coroutines.CoroutineExceptionHandler
@@ -21,39 +22,19 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 
-class AdBanner {
-    companion object {
-        private var instance: AdBanner? = null
-        fun getInstance(): AdBanner {
-            if (instance == null) instance = AdBanner()
-            return instance!!
-        }
+object AdBanner {
+    interface AdBannerListener {
+        fun onAdLoaded(adView: AdView)
+        fun onAdFailedToLoad(loadAdError: LoadAdError)
     }
-
-    private val exceptionHandler = CoroutineExceptionHandler { _, _ -> }
-
-    interface AdBannerCallback {
-        fun onAdLoaded(adView: AdView?)
-    }
-
-    fun showBanner(
-        mActivity: Activity,
-        id: String,
-        frameLayout: FrameLayout,
-        line: View,
-        timeOut: Long? = null, /*time millis*/
-        mAdBannerCallback: AdBannerCallback? = null
-    ) {
-        var isLoaded = false
-        if (!AdmobUtils.isNetworkAvailable(mActivity) || !AdmobUtils.isShowAds) {
-            line.gone()
-            frameLayout.gone()
+    fun showBanner(mActivity: Activity, id: String, frameLayout: FrameLayout, line: View, adBannerListener: AdBannerListener? = null) {
+        if (!AdmobUtils.isShowAds) {
+            line.visibility = View.GONE
+            frameLayout.visibility = View.GONE
             return
         }
-        var idBanner = id
-        if (AdmobUtils.isDebug) {
-            idBanner = AdmobUtils.BANNER
-        }
+
+        val idBanner = if (AdmobUtils.isDebug) AdmobUtils.BANNER else id
         val mAdView = AdView(mActivity)
         mAdView.setAdSize(getAdSize(mActivity))
         mAdView.adUnitId = idBanner
@@ -69,17 +50,13 @@ class AdBanner {
                 layoutShimmer.stopShimmer()
                 frameLayout.removeAllViews()
                 frameLayout.addView(mAdView)
-                isLoaded = true
-                mAdBannerCallback?.onAdLoaded(mAdView)
+                adBannerListener?.onAdLoaded(mAdView)
             }
-        }
-        timeOut?.let {
-            CoroutineScope(Dispatchers.Main + exceptionHandler).launch {
-                delay(it)
-                if (!isLoaded) {
-                    frameLayout.gone()
-                    line.gone()
-                }
+
+            override fun onAdFailedToLoad(p0: LoadAdError) {
+                super.onAdFailedToLoad(p0)
+                frameLayout.gone()
+                adBannerListener?.onAdFailedToLoad(p0)
             }
         }
     }
@@ -89,19 +66,14 @@ class AdBanner {
         id: String,
         frameLayout: FrameLayout,
         line: View,
-        timeOut: Long? = null, /*time millis*/
-        mAdBannerCallback: AdBannerCallback? = null
+        adBannerListener: AdBannerListener? = null
     ) {
-        var isLoaded = false
-        if (!AdmobUtils.isNetworkAvailable(mActivity) || !AdmobUtils.isShowAds) {
-            line.gone()
-            frameLayout.gone()
+        if (!AdmobUtils.isShowAds) {
+            line.visibility = View.GONE
+            frameLayout.visibility = View.GONE
             return
         }
-        var idBanner = id
-        if (AdmobUtils.isDebug) {
-            idBanner = AdmobUtils.BANNER
-        }
+        val idBanner = if (AdmobUtils.isDebug) AdmobUtils.BANNER else id
         val mAdView = AdView(mActivity)
         mAdView.setAdSize(getAdSize(mActivity))
         mAdView.adUnitId = idBanner
@@ -121,17 +93,13 @@ class AdBanner {
                 layoutShimmer.stopShimmer()
                 frameLayout.removeAllViews()
                 frameLayout.addView(mAdView)
-                isLoaded = true
-                mAdBannerCallback?.onAdLoaded(mAdView)
+                adBannerListener?.onAdLoaded(mAdView)
             }
-        }
-        timeOut?.let {
-            CoroutineScope(Dispatchers.Main + exceptionHandler).launch {
-                delay(it)
-                if (!isLoaded) {
-                    frameLayout.gone()
-                    line.gone()
-                }
+
+            override fun onAdFailedToLoad(p0: LoadAdError) {
+                super.onAdFailedToLoad(p0)
+                frameLayout.gone()
+                adBannerListener?.onAdFailedToLoad(p0)
             }
         }
     }

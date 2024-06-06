@@ -10,12 +10,17 @@ import android.widget.ImageView
 import android.widget.RatingBar
 import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.viewbinding.ViewBinding
+import com.facebook.shimmer.ShimmerFrameLayout
+import com.google.android.gms.ads.AdListener
 import com.google.android.gms.ads.AdLoader
 import com.google.android.gms.ads.AdRequest
+import com.google.android.gms.ads.LoadAdError
 import com.google.android.gms.ads.nativead.MediaView
 import com.google.android.gms.ads.nativead.NativeAd
 import com.google.android.gms.ads.nativead.NativeAdView
 import com.sonbn.admobutilslibrary.R
+import com.sonbn.admobutilslibrary.databinding.GntSmallTemplateViewBinding
 import com.sonbn.admobutilslibrary.databinding.ShimmerNativeMediumBinding
 import com.sonbn.admobutilslibrary.databinding.ShimmerNativeSmallBinding
 import com.sonbn.admobutilslibrary.gone
@@ -26,29 +31,19 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 
-class AdNative {
-    private val exceptionHandler = CoroutineExceptionHandler { _, _ -> }
+object AdNative {
     private val map = mutableMapOf<String, NativeAd>()
 
-    companion object {
-        private const val TAG = "AdNative"
-        private var instance: AdNative? = null
-        fun getInstance(): AdNative {
-            if (instance == null) instance = AdNative()
-            return instance!!
-        }
+    interface NativeListener {
+        fun onAdLoaded(nativeAd: NativeAd)
+        fun onAdFailedToLoad(adError: LoadAdError)
     }
-
-    interface AdNativeCallback {
-        fun onAdLoaded(nativeAd: NativeAd?)
-    }
-
     fun loadNative(activity: Activity, id: String) {
         var nativeId = id
         if (AdmobUtils.isDebug) {
             nativeId = AdmobUtils.NATIVE
         }
-        if (!AdmobUtils.isShowAds || !AdmobUtils.isNetworkAvailable(activity)) {
+        if (!AdmobUtils.isShowAds) {
             return
         }
         val builder =
@@ -56,97 +51,134 @@ class AdNative {
         builder.loadAd(AdRequest.Builder().build())
     }
 
+    fun loadAndShow2NativeSmall(
+        activity: Activity,
+        id: String,
+        viewGroup1: ViewGroup,
+        viewGroup2: ViewGroup,
+        idShimmer1: Int = R.layout.shimmer_native_small,
+        idShimmer2: Int = R.layout.shimmer_native_small,
+        idLayout1: Int = R.layout.gnt_small_template_view,
+        idLayout2: Int = R.layout.gnt_small_template_view,
+        nativeListener: NativeListener? = null
+    ) {
+        if (!AdmobUtils.isShowAds) {
+            viewGroup1.visibility = View.GONE
+            viewGroup2.visibility = View.GONE
+            return
+        }
+        val nativeId = if (AdmobUtils.isDebug) AdmobUtils.NATIVE else id
+        val layoutShimmer1 = activity.layoutInflater.inflate(idShimmer1, null, false) as ShimmerFrameLayout
+        val layoutShimmer2 = activity.layoutInflater.inflate(idShimmer2, null, false) as ShimmerFrameLayout
+
+        layoutShimmer1.startShimmer()
+        viewGroup1.removeAllViews()
+        viewGroup1.addView(layoutShimmer1)
+
+        layoutShimmer2.startShimmer()
+        viewGroup2.removeAllViews()
+        viewGroup2.addView(layoutShimmer2)
+
+        var nativeAd1: NativeAd? = null
+        var nativeAd2: NativeAd? = null
+        lateinit var adLoader: AdLoader
+        adLoader = AdLoader.Builder(activity, nativeId)
+            .forNativeAd { p0 ->
+                if (nativeAd1 == null) {
+                    nativeAd1 = p0
+                    showNative(activity, id, p0, viewGroup1, idLayout1)
+                } else {
+                    if (nativeAd2 == null) {
+                        nativeAd2 = p0
+                        showNative(activity, id, p0, viewGroup2, idLayout2)
+                    }
+                }
+
+                if (!adLoader.isLoading) {
+                    if (nativeAd2 == null) {
+                        viewGroup2.gone()
+                    }
+                    nativeListener?.onAdLoaded(p0)
+                }
+            }.withAdListener(object : AdListener() {
+                override fun onAdFailedToLoad(adError: LoadAdError) {
+                    if (nativeAd1 == null) viewGroup1.gone()
+                    if (nativeAd2 == null) viewGroup2.gone()
+                    nativeListener?.onAdFailedToLoad(adError)
+                }
+            })
+            .build()
+        adLoader.loadAds(AdRequest.Builder().build(), 2)
+    }
+
     fun loadAndShowNativeSmall(
         activity: Activity,
         id: String,
         viewGroup: ViewGroup,
-        idLayout: Int? = null,
-        timeOut: Long? = null,
-        adNativeCallback: AdNativeCallback? = null
+        idShimmer: Int = R.layout.shimmer_native_small,
+        idLayout: Int = R.layout.gnt_small_template_view,
+        nativeListener: NativeListener? = null
     ) {
-        var nativeId = id
-        var isLoaded = false
-        if (AdmobUtils.isDebug) {
-            nativeId = AdmobUtils.NATIVE
-        }
-        if (!AdmobUtils.isShowAds || !AdmobUtils.isNetworkAvailable(activity)) {
-            viewGroup.gone()
+        if (!AdmobUtils.isShowAds) {
+            viewGroup.visibility = View.GONE
             return
         }
-        val layoutShimmer = ShimmerNativeSmallBinding.inflate(LayoutInflater.from(activity)).root
+        val nativeId = if (AdmobUtils.isDebug) AdmobUtils.NATIVE else id
+        val layoutShimmer: ShimmerFrameLayout = activity.layoutInflater.inflate(idShimmer, null, false) as ShimmerFrameLayout
         layoutShimmer.startShimmer()
         viewGroup.removeAllViews()
         viewGroup.addView(layoutShimmer)
-        var layout = idLayout
-        if (layout == null) layout = R.layout.gnt_small_template_view
         val builder = AdLoader.Builder(activity, nativeId).forNativeAd { p0 ->
-            isLoaded = true
             layoutShimmer.stopShimmer()
-            showNative(activity, id, p0, viewGroup, layout)
-            adNativeCallback?.onAdLoaded(p0)
-        }.build()
-        builder.loadAd(AdRequest.Builder().build())
-
-        timeOut?.let {
-            CoroutineScope(Dispatchers.Main + exceptionHandler).launch {
-                delay(it)
-                if (!isLoaded) {
-                    viewGroup.gone()
-                }
+            nativeListener?.onAdLoaded(p0)
+            showNative(activity, id, p0, viewGroup, idLayout)
+        }.withAdListener(object : AdListener() {
+            override fun onAdFailedToLoad(adError: LoadAdError) {
+                viewGroup.gone()
+                nativeListener?.onAdFailedToLoad(adError)
             }
-        }
+        }).build()
+        builder.loadAd(AdRequest.Builder().build())
     }
 
     fun loadAndShowNativeMedium(
         activity: Activity,
         id: String,
         viewGroup: ViewGroup,
-        idLayout: Int? = null,
-        timeOut: Long? = null,
-        adNativeCallback: AdNativeCallback? = null
+        idShimmer: Int = R.layout.shimmer_native_medium,
+        idLayout: Int = R.layout.gnt_medium_template_view,
+        nativeListener: NativeListener? = null
     ) {
-        var nativeId = id
-        var isLoaded = false
-
-        if (AdmobUtils.isDebug) {
-            nativeId = AdmobUtils.NATIVE
-        }
-        if (!AdmobUtils.isShowAds || !AdmobUtils.isNetworkAvailable(activity)) {
-            viewGroup.gone()
+        if (!AdmobUtils.isShowAds) {
+            viewGroup.visibility = View.GONE
             return
         }
-        val layoutShimmer = ShimmerNativeMediumBinding.inflate(LayoutInflater.from(activity)).root
+        val nativeId = if (AdmobUtils.isDebug) AdmobUtils.NATIVE else id
+        val layoutShimmer: ShimmerFrameLayout = activity.layoutInflater.inflate(idShimmer, null, false) as ShimmerFrameLayout
         layoutShimmer.startShimmer()
         viewGroup.removeAllViews()
         viewGroup.addView(layoutShimmer)
-        var layout = idLayout
-        if (layout == null) layout = R.layout.gnt_medium_template_view
         val builder = AdLoader.Builder(activity, nativeId).forNativeAd { p0 ->
-            isLoaded = true
             layoutShimmer.stopShimmer()
-            showNative(activity, id, p0, viewGroup, layout)
-            adNativeCallback?.onAdLoaded(p0)
-        }.build()
-        builder.loadAd(AdRequest.Builder().build())
-
-        timeOut?.let {
-            CoroutineScope(Dispatchers.Main + exceptionHandler).launch {
-                delay(it)
-                if (!isLoaded) {
-                    viewGroup.gone()
-                }
+            nativeListener?.onAdLoaded(p0)
+            showNative(activity, id, p0, viewGroup, idLayout)
+        }.withAdListener(object : AdListener() {
+            override fun onAdFailedToLoad(adError: LoadAdError) {
+                viewGroup.gone()
+                nativeListener?.onAdFailedToLoad(adError)
             }
-        }
+        }).build()
+        builder.loadAd(AdRequest.Builder().build())
     }
 
-    fun showNative(
+    private fun showNative(
         activity: Activity,
         id: String,
         nativeAd: NativeAd? = null,
         parent: ViewGroup,
         idLayout: Int
     ) {
-        if (!AdmobUtils.isShowAds && !AdmobUtils.isNetworkAvailable(activity)) {
+        if (!AdmobUtils.isShowAds) {
             return
         }
         val layoutNative = activity.layoutInflater.inflate(idLayout, null, false) as NativeAdView
@@ -196,8 +228,6 @@ class AdNative {
 
         primaryView!!.text = headline
         callToActionView!!.text = cta
-
-        //  Set the secondary view to be the star rating if available.
 
         //  Set the secondary view to be the star rating if available.
         if (starRating != null && starRating > 0) {
