@@ -1,18 +1,14 @@
 package com.sonbn.admobutilslibrary.ads
 
 import android.app.Activity
-import android.os.Looper
 import android.os.SystemClock
 import android.util.Log
-import androidx.fragment.app.DialogFragment
-import androidx.fragment.app.FragmentActivity
 import com.google.android.gms.ads.AdError
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.FullScreenContentCallback
 import com.google.android.gms.ads.LoadAdError
 import com.google.android.gms.ads.rewarded.RewardedAd
 import com.google.android.gms.ads.rewarded.RewardedAdLoadCallback
-import com.sonbn.admobutilslibrary.dialog.DialogLoadingAd
 import kotlin.random.Random
 
 
@@ -85,8 +81,6 @@ class AdReward {
             return
         }
         callback.onLoaded(map[id]!!)
-        val dialogLoadingAd = DialogLoadingAd()
-        val fragmentActivity = mActivity as FragmentActivity
 
         map[id]!!.fullScreenContentCallback = object : FullScreenContentCallback() {
             override fun onAdClicked() {
@@ -109,7 +103,6 @@ class AdReward {
                 map[id] = null
                 callback.onCallback()
                 showedFullScreen = false
-                dismissDialog(dialogLoadingAd)
             }
 
             override fun onAdImpression() {
@@ -121,7 +114,6 @@ class AdReward {
                 // Called when ad is shown.
                 Log.d(TAG, "Ad showed fullscreen content.")
                 showedFullScreen = true
-                dismissDialog(dialogLoadingAd)
             }
         }
 
@@ -131,37 +123,12 @@ class AdReward {
             return
         }
 
-        if (showDialogLoading) {
-            dialogLoadingAd.show(
-                fragmentActivity.supportFragmentManager,
-                DialogLoadingAd::class.simpleName
-            )
-            android.os.Handler(Looper.getMainLooper())
-                .postDelayed({
-                    map[id]?.show(mActivity) { rewardItem -> // Handle the reward.
-                        Log.d(TAG, "The user earned the reward.")
-                        val rewardAmount = rewardItem.amount
-                        val rewardType = rewardItem.type
-                        callback.rewardItem(rewardAmount, rewardType)
-                    }
-                }, 2000)
-        } else {
-            map[id]?.show(mActivity) { rewardItem -> // Handle the reward.
-                Log.d(TAG, "The user earned the reward.")
-                val rewardAmount = rewardItem.amount
-                val rewardType = rewardItem.type
-                callback.rewardItem(rewardAmount, rewardType)
-            }
+        map[id]?.show(mActivity) { rewardItem -> // Handle the reward.
+            Log.d(TAG, "The user earned the reward.")
+            val rewardAmount = rewardItem.amount
+            val rewardType = rewardItem.type
+            callback.rewardItem(rewardAmount, rewardType)
         }
-    }
 
-    private fun dismissDialog(dialog: DialogFragment) {
-        try {
-            if (dialog.isAdded) {
-                dialog.dismiss()
-            }
-        } catch (e: Throwable) {
-            Log.e(TAG, e.message.toString())
-        }
     }
 }
