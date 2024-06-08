@@ -35,6 +35,7 @@ object ResumeManager {
 
     private var resumeListener: ResumeListener? = null
     fun setResumeListener(resumeListener: ResumeListener?) {
+        if (this.resumeListener == null) return
         this.resumeListener = resumeListener
     }
 

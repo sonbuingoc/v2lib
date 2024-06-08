@@ -22,50 +22,67 @@ object AOAManager {
     }
     private var isTimeOutCall = false
     private var timeoutJob = TIME_OUT
+    private var aoaListener: AOAListener? = null
+
+    /**
+    * @param time in millisecond*/
     fun setTimeOut(time: Long) {
         this.timeoutJob = time
     }
 
     interface AOAListener {
+        fun onFetchAd()
         fun onAdLoaded(adOpenAd: AppOpenAd)
         fun onAdFailedToLoad(loadAdError: LoadAdError)
         fun onShowAdComplete()
         fun onShowAdError(adError: AdError)
-        fun onNotAvailable()
         fun onTimeout()
+    }
+
+    interface OnAoaShowCompleteListener {
+        fun onAoaShowComplete()
+    }
+
+    fun setAOAListener(aoaListener: AOAListener) {
+        if (this.aoaListener != null) return
+        this.aoaListener = aoaListener
     }
 
     fun showAdIfAvailable(
         mActivity: Activity,
         id: String,
-        aoaListener: AOAListener
+        onAoaShowCompleteListener: OnAoaShowCompleteListener
     ) {
         if (!AdmobUtils.isShowAds) {
-            aoaListener.onNotAvailable()
+            onAoaShowCompleteListener.onAoaShowComplete()
             return
         }
         /**/
+        aoaListener?.onFetchAd()
         isTimeOutCall = false
         val job = CoroutineScope(Dispatchers.Main + exception).launch {
             delay(timeoutJob)
             isTimeOutCall = true
-            aoaListener.onTimeout()
+            aoaListener?.onTimeout()
+            onAoaShowCompleteListener.onAoaShowComplete()
         }
         val fullScreenContentCallback: FullScreenContentCallback =
             object : FullScreenContentCallback() {
                 override fun onAdDismissedFullScreenContent() {
-                    aoaListener.onShowAdComplete()
+                    onAoaShowCompleteListener.onAoaShowComplete()
                     Log.d(TAG, "onAdDismissedFullScreenContent")
                 }
 
                 override fun onAdFailedToShowFullScreenContent(adError: AdError) {
-                    aoaListener.onShowAdError(adError)
+                    onAoaShowCompleteListener.onAoaShowComplete()
                     job.cancel()
+                    aoaListener?.onShowAdError(adError)
                     Log.d(TAG, "onAdFailedToShowFullScreenContent: ${adError.message}")
                 }
 
                 override fun onAdShowedFullScreenContent() {
                     job.cancel()
+                    aoaListener?.onShowAdComplete()
                     Log.d(TAG, "onAdShowedFullScreenContent")
                 }
             }
@@ -75,15 +92,16 @@ object AOAManager {
                 ad.fullScreenContentCallback = fullScreenContentCallback
                 if (!isTimeOutCall && AdmobUtils.isForeground) {
                     ad.show(mActivity)
-                }else{
-                    aoaListener.onNotAvailable()
+                } else {
+                    onAoaShowCompleteListener.onAoaShowComplete()
                 }
+                aoaListener?.onAdLoaded(ad)
                 Log.d(TAG, "onAdLoaded")
-                aoaListener.onAdLoaded(ad)
             }
 
             override fun onAdFailedToLoad(loadAdError: LoadAdError) {
-                aoaListener.onAdFailedToLoad(loadAdError)
+                onAoaShowCompleteListener.onAoaShowComplete()
+                aoaListener?.onAdFailedToLoad(loadAdError)
                 job.cancel()
                 Log.d(TAG, "onAdFailedToLoad: ${loadAdError.message}")
             }

@@ -19,6 +19,23 @@ object AdInterstitial {
     private var frequencyCapping = 0
     private var interstitialPercent = 100
     private var isLoading = false
+    private var onAdInterstitialListener: OnAdInterstitialListener? = null
+
+    interface OnAdInterstitialListener {
+        fun onFetchAd()
+        fun onAdLoaded(interstitialAd: InterstitialAd)
+        fun onAdFailedToLoad(loadAdError: LoadAdError)
+
+        fun onAdShowedFullScreenContent()
+        fun onAdFailedToShowFullScreenContent(adError: AdError)
+    }
+
+
+    fun setOnAdInterstitialListener(onAdInterstitialListener: OnAdInterstitialListener) {
+        if (this.onAdInterstitialListener != null) return
+        this.onAdInterstitialListener = onAdInterstitialListener
+    }
+
     fun setFrequencyCapping(value: Int) {
         this.frequencyCapping = value
     }
@@ -31,10 +48,12 @@ object AdInterstitial {
         fun onAdLoaded(interstitialAd: InterstitialAd)
         fun onAdFailedToLoad(loadAdError: LoadAdError)
     }
+
     interface InterShowCallback {
         fun onAdShowedFullScreenContent()
         fun onAdFailedToShowFullScreenContent(adError: AdError)
     }
+
     fun loadInterstitial(
         activity: Activity,
         id: String,
@@ -44,6 +63,7 @@ object AdInterstitial {
             return
         }
         isLoading = true
+        onAdInterstitialListener?.onFetchAd()
         val idInter: String = if (AdmobUtils.isDebug) AdmobUtils.INTERSTITIAL else id
         val adRequest: AdRequest = AdRequest.Builder().build()
         val interstitialAdLoadCallback = object : InterstitialAdLoadCallback() {
@@ -54,6 +74,7 @@ object AdInterstitial {
                 isLoading = false
                 Log.i(TAG, "onAdLoaded")
                 loadCallback?.onAdLoaded(interstitialAd)
+                onAdInterstitialListener?.onAdLoaded(interstitialAd)
             }
 
             override fun onAdFailedToLoad(loadAdError: LoadAdError) {
@@ -61,6 +82,7 @@ object AdInterstitial {
                 isLoading = false
                 Log.i(TAG, "onAdFailedToLoad: $loadAdError")
                 loadCallback?.onAdFailedToLoad(loadAdError)
+                onAdInterstitialListener?.onAdFailedToLoad(loadAdError)
             }
 
         }
@@ -103,6 +125,7 @@ object AdInterstitial {
                 showCallback?.onAdFailedToShowFullScreenContent(p0)
                 loadInterstitial(mActivity, id)
                 startTimeShow = SystemClock.elapsedRealtime()
+                onAdInterstitialListener?.onAdFailedToShowFullScreenContent(p0)
             }
 
             override fun onAdImpression() {
@@ -116,6 +139,7 @@ object AdInterstitial {
                 map[id] = null
                 showCallback?.onAdShowedFullScreenContent()
                 Log.d(TAG, "Ad showed fullscreen content.")
+                onAdInterstitialListener?.onAdShowedFullScreenContent()
             }
         }
 

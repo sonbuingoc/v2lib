@@ -2,7 +2,6 @@ package com.sonbn.admobutilslibrary.ads
 
 import android.app.Activity
 import android.text.TextUtils
-import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
@@ -10,7 +9,6 @@ import android.widget.ImageView
 import android.widget.RatingBar
 import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
-import androidx.viewbinding.ViewBinding
 import com.facebook.shimmer.ShimmerFrameLayout
 import com.google.android.gms.ads.AdListener
 import com.google.android.gms.ads.AdLoader
@@ -20,24 +18,28 @@ import com.google.android.gms.ads.nativead.MediaView
 import com.google.android.gms.ads.nativead.NativeAd
 import com.google.android.gms.ads.nativead.NativeAdView
 import com.sonbn.admobutilslibrary.R
-import com.sonbn.admobutilslibrary.databinding.GntSmallTemplateViewBinding
-import com.sonbn.admobutilslibrary.databinding.ShimmerNativeMediumBinding
-import com.sonbn.admobutilslibrary.databinding.ShimmerNativeSmallBinding
-import com.sonbn.admobutilslibrary.gone
-import kotlinx.coroutines.CoroutineExceptionHandler
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import com.sonbn.admobutilslibrary.utils.gone
 
 
 object AdNative {
     private val map = mutableMapOf<String, NativeAd>()
+    private var onAdNativeListener: OnAdNativeListener? = null
+    interface OnAdNativeListener {
+        fun onFetchAd()
+        fun onAdLoaded(nativeAd: NativeAd)
+        fun onAdFailedToLoad(adError: LoadAdError)
 
+    }
     interface NativeListener {
         fun onAdLoaded(nativeAd: NativeAd)
         fun onAdFailedToLoad(adError: LoadAdError)
     }
+
+    fun setOnAdNativeListener(onAdNativeListener: OnAdNativeListener) {
+        if (this.onAdNativeListener != null) return
+        this.onAdNativeListener = onAdNativeListener
+    }
+
     fun loadNative(activity: Activity, id: String) {
         var nativeId = id
         if (AdmobUtils.isDebug) {
@@ -67,6 +69,7 @@ object AdNative {
             viewGroup2.visibility = View.GONE
             return
         }
+        onAdNativeListener?.onFetchAd()
         val nativeId = if (AdmobUtils.isDebug) AdmobUtils.NATIVE else id
         val layoutShimmer1 = activity.layoutInflater.inflate(idShimmer1, null, false) as ShimmerFrameLayout
         val layoutShimmer2 = activity.layoutInflater.inflate(idShimmer2, null, false) as ShimmerFrameLayout
@@ -99,12 +102,15 @@ object AdNative {
                         viewGroup2.gone()
                     }
                     nativeListener?.onAdLoaded(p0)
+                    onAdNativeListener?.onAdLoaded(p0)
                 }
+
             }.withAdListener(object : AdListener() {
                 override fun onAdFailedToLoad(adError: LoadAdError) {
                     if (nativeAd1 == null) viewGroup1.gone()
                     if (nativeAd2 == null) viewGroup2.gone()
                     nativeListener?.onAdFailedToLoad(adError)
+                    onAdNativeListener?.onAdFailedToLoad(adError)
                 }
             })
             .build()
@@ -123,6 +129,7 @@ object AdNative {
             viewGroup.visibility = View.GONE
             return
         }
+        onAdNativeListener?.onFetchAd()
         val nativeId = if (AdmobUtils.isDebug) AdmobUtils.NATIVE else id
         val layoutShimmer: ShimmerFrameLayout = activity.layoutInflater.inflate(idShimmer, null, false) as ShimmerFrameLayout
         layoutShimmer.startShimmer()
@@ -132,10 +139,12 @@ object AdNative {
             layoutShimmer.stopShimmer()
             nativeListener?.onAdLoaded(p0)
             showNative(activity, id, p0, viewGroup, idLayout)
+            onAdNativeListener?.onAdLoaded(p0)
         }.withAdListener(object : AdListener() {
             override fun onAdFailedToLoad(adError: LoadAdError) {
                 viewGroup.gone()
                 nativeListener?.onAdFailedToLoad(adError)
+                onAdNativeListener?.onAdFailedToLoad(adError)
             }
         }).build()
         builder.loadAd(AdRequest.Builder().build())
@@ -162,10 +171,12 @@ object AdNative {
             layoutShimmer.stopShimmer()
             nativeListener?.onAdLoaded(p0)
             showNative(activity, id, p0, viewGroup, idLayout)
+            onAdNativeListener?.onAdLoaded(p0)
         }.withAdListener(object : AdListener() {
             override fun onAdFailedToLoad(adError: LoadAdError) {
                 viewGroup.gone()
                 nativeListener?.onAdFailedToLoad(adError)
+                onAdNativeListener?.onAdFailedToLoad(adError)
             }
         }).build()
         builder.loadAd(AdRequest.Builder().build())

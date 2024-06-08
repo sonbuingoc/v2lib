@@ -5,7 +5,6 @@ import android.content.Intent
 import android.net.Uri
 import androidx.browser.customtabs.CustomTabsIntent
 import com.sonbn.admobutilslibrary.BuildConfig
-import com.sonbn.admobutilslibrary.runTryCatch
 
 object SettingUtils {
     fun feedback(context: Context, subject: String, email: String) {

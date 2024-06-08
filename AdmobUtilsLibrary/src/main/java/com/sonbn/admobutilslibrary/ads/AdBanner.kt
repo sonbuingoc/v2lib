@@ -14,25 +14,36 @@ import com.google.android.gms.ads.AdSize
 import com.google.android.gms.ads.AdView
 import com.google.android.gms.ads.LoadAdError
 import com.sonbn.admobutilslibrary.databinding.ShimmerBannerBinding
-import com.sonbn.admobutilslibrary.gone
-import kotlinx.coroutines.CoroutineExceptionHandler
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import com.sonbn.admobutilslibrary.utils.gone
 
 
 object AdBanner {
+    private var mAdBannerListener: AdBannerListener? = null
+
     interface AdBannerListener {
+        fun onFetchAd()
         fun onAdLoaded(adView: AdView)
         fun onAdFailedToLoad(loadAdError: LoadAdError)
     }
-    fun showBanner(mActivity: Activity, id: String, frameLayout: FrameLayout, line: View, adBannerListener: AdBannerListener? = null) {
+
+    fun setAdBannerListener(adBannerListener: AdBannerListener) {
+        if (this.mAdBannerListener != null) return
+        this.mAdBannerListener = adBannerListener
+    }
+
+    fun showBanner(
+        mActivity: Activity,
+        id: String,
+        frameLayout: FrameLayout,
+        line: View,
+        adBannerListener: AdBannerListener? = null
+    ) {
         if (!AdmobUtils.isShowAds) {
             line.visibility = View.GONE
             frameLayout.visibility = View.GONE
             return
         }
+        mAdBannerListener?.onFetchAd()
 
         val idBanner = if (AdmobUtils.isDebug) AdmobUtils.BANNER else id
         val mAdView = AdView(mActivity)
