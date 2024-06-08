@@ -45,7 +45,9 @@ class CornersHelper(val context: Context, private val cornersModel: CornersModel
             }
             canvas.clipPath(path)
         } catch (e: Throwable) {
-            if (BuildConfig.DEBUG) e.printStackTrace()
+            if (BuildConfig.DEBUG) {
+                e.printStackTrace()
+            }
         }
     }
 }

@@ -27,7 +27,9 @@ object SettingUtils {
             shareIntent.putExtra(Intent.EXTRA_TEXT, shareMessage)
             context.startActivity(Intent.createChooser(shareIntent, label))
         } catch (e: Throwable) {
-            if (BuildConfig.DEBUG) e.printStackTrace()
+            if (BuildConfig.DEBUG) {
+                e.printStackTrace()
+            }
         }
     }
 
@@ -61,7 +63,9 @@ object SettingUtils {
                 Uri.parse(url)
             )
         } catch (e: Throwable) {
-            if (BuildConfig.DEBUG) e.printStackTrace()
+            if (BuildConfig.DEBUG) {
+                e.printStackTrace()
+            }
         }
     }
 }

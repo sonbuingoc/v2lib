@@ -4,6 +4,7 @@ import android.os.SystemClock
 import android.view.View
 import android.view.animation.Animation
 import android.view.animation.ScaleAnimation
+import com.sonbn.admobutilslibrary.BuildConfig
 
 fun View.gone() {
     visibility = View.GONE
