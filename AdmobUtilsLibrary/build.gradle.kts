@@ -34,6 +34,9 @@ android {
     viewBinding {
         enable = true
     }
+    buildFeatures {
+        buildConfig = true
+    }
 }
 publishing {
     publications {
