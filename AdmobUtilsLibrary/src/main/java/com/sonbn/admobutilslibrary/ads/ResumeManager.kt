@@ -28,9 +28,9 @@ object ResumeManager {
     interface ResumeListener {
         fun onFetchAd()
         fun onAdLoaded(appOpenAd: AppOpenAd)
-        fun onAdFailedToLoad(adError: LoadAdError?)
+        fun onAdFailedToLoad(adError: LoadAdError)
         fun onAdShowedFullScreenContent()
-        fun onAdFailedToShowFullScreenContent(adError: AdError?)
+        fun onAdFailedToShowFullScreenContent(adError: AdError)
     }
 
     private var resumeListener: ResumeListener? = null
