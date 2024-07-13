@@ -19,7 +19,7 @@ dependencies {
 
 # EU Consent
 ```
-val gdprManager = GDPRManager.getInstance(this)
+val gdprManager = GDPRManager.getInstance()
         gdprManager.init(this)
         gdprManager.mCallback = object : GDPRManager.Callback {
             override fun initializeMobileAdsSdk(value: Boolean) {

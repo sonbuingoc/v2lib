@@ -11,17 +11,17 @@ import com.google.android.ump.ConsentRequestParameters
 import com.google.android.ump.UserMessagingPlatform
 
 
-class GDPRManager(mActivity: Activity) {
-    private val prefs: SharedPreferences
+class GDPRManager {
+    private lateinit var prefs: SharedPreferences
     private lateinit var consentInformation: ConsentInformation
     var mCallback: Callback? = null
 
     companion object {
         private const val TAG = "GDPRManager"
         private var instance: GDPRManager? = null
-        fun getInstance(activity: Activity): GDPRManager {
+        fun getInstance(): GDPRManager {
             if (instance == null) {
-                instance = GDPRManager(activity)
+                instance = GDPRManager()
             }
             return instance!!
         }
@@ -29,12 +29,12 @@ class GDPRManager(mActivity: Activity) {
 
 
     init {
-        prefs = PreferenceManager.getDefaultSharedPreferences(mActivity.application)
+
     }
 
     fun init(activity: Activity) {
+        prefs = PreferenceManager.getDefaultSharedPreferences(activity.application)
         // Set tag for underage of consent. false means users are not underage.
-
         val params = ConsentRequestParameters.Builder()
             .apply {
                 if (BuildConfig.DEBUG) {

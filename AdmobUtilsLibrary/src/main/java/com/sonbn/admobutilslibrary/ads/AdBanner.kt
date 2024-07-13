@@ -77,6 +77,7 @@ object AdBanner {
         id: String,
         frameLayout: FrameLayout,
         line: View,
+        collapsibleType: BannerCollapsibleType = BannerCollapsibleType.TOP,
         adBannerListener: AdBannerListener? = null
     ) {
         if (!AdmobUtils.isShowAds) {
@@ -89,7 +90,7 @@ object AdBanner {
         mAdView.setAdSize(getAdSize(mActivity))
         mAdView.adUnitId = idBanner
         val extras = Bundle()
-        extras.putString("collapsible", "top")
+        extras.putString("collapsible", collapsibleType.value)
         val adRequest = AdRequest.Builder()
             .addNetworkExtrasBundle(AdMobAdapter::class.java, extras)
             .build()
@@ -123,5 +124,10 @@ object AdBanner {
         val density = outMetrics.density
         val adWidth = (widthPixels / density).toInt()
         return AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(mActivity, adWidth)
+    }
+
+    enum class BannerCollapsibleType(val value: String) {
+        TOP("top"),
+        BOTTOM("bottom")
     }
 }
