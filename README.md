@@ -55,3 +55,32 @@ AdBanner.showBannerCollapsible(this, AdsManager.BANNER_COLLAPSIBLE, binding.flBa
 
 //Native small min height = 120dp, medium = 200dp
 ```
+# Billing
+```
+private val billingUtils by lazy { BillingUtils.getInstance() }
+
+//Query
+override fun onResume() {
+	super.onResume()
+	billingUtils.queryPurchase(BillingClient.ProductType.INAPP)
+}
+//init
+billingUtils.init(this)
+//listener
+billingUtils.setOnPurchaseCompleteListener {
+	println("sonbn purchase: ${it}")
+}
+//fetch product
+val productIds = listOf(Pair("test_sub1", BillingClient.ProductType.SUBS), Pair("test_inapp1", BillingClient.ProductType.INAPP))
+billingUtils.fetchProductList(productIds) { productDetailsList ->
+	println("sonbn product: ${productDetailsList.size}")
+}
+//buy
+billingUtils.launchPurchaseFlow(this@MainActivity, billingUtils.getProductDetailsList()[0]!!)
+
+//restore
+CoroutineScope(Dispatchers.IO).launch {
+	val purchases = billingUtils.restorePurchases()
+	println("sonbn restore: ${purchases.size}")
+}
+```
