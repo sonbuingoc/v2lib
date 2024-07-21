@@ -13,24 +13,21 @@ repositories {
 # Step2.
 ```
 dependencies {
-	implementation 'com.github.sonbuingoc:AdmobUtilsLibrary:Tag'
+	implementation ("com.github.sonbuingoc:v2lib:Tag")
 }
 ```
 
 # EU Consent
 ```
-val gdprManager = GDPRManager.getInstance()
-        gdprManager.init(this)
-        gdprManager.mCallback = object : GDPRManager.Callback {
+val gdprManager = GDPRManager.getInstance().init(this, object : GDPRManager.Callback {
             override fun initializeMobileAdsSdk(value: Boolean) {
                 if (value) {
                    //
                 } else {
                    //
                 }
-            }
-
-        }
+            })
+        
 ```
 
 # Ads
