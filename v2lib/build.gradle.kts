@@ -62,5 +62,8 @@ dependencies {
     implementation("com.airbnb.android:lottie:6.4.0")
     implementation("com.facebook.shimmer:shimmer:0.5.0@aar")
     implementation("com.google.android.play:review-ktx:2.0.1")
+    implementation("androidx.preference:preference-ktx:1.1.1")
+    val billing_version = "7.0.0"
+    implementation("com.android.billingclient:billing:$billing_version")
 }
 

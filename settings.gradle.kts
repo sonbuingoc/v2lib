@@ -15,6 +15,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "AdmobUtilsLibrary"
+rootProject.name = "mylibrary"
 include(":app")
-include(":AdmobUtilsLibrary")
+include(":v2lib")

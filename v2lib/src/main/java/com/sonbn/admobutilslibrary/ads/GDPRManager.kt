@@ -2,8 +2,8 @@ package com.sonbn.admobutilslibrary.ads
 
 import android.app.Activity
 import android.content.SharedPreferences
-import android.preference.PreferenceManager
 import android.util.Log
+import androidx.preference.PreferenceManager
 import com.facebook.shimmer.BuildConfig
 import com.google.android.ump.ConsentDebugSettings
 import com.google.android.ump.ConsentInformation
@@ -14,7 +14,6 @@ import com.google.android.ump.UserMessagingPlatform
 class GDPRManager {
     private lateinit var prefs: SharedPreferences
     private lateinit var consentInformation: ConsentInformation
-    var mCallback: Callback? = null
 
     companion object {
         private const val TAG = "GDPRManager"
@@ -26,14 +25,14 @@ class GDPRManager {
             return instance!!
         }
     }
-
-
-    init {
-
-    }
-
-    fun init(activity: Activity) {
+    
+    fun init(activity: Activity, callback: Callback? = null) {
         prefs = PreferenceManager.getDefaultSharedPreferences(activity.application)
+
+        if (!isGDPR()){
+            callback?.initializeMobileAdsSdk(true)
+            return
+        }
         // Set tag for underage of consent. false means users are not underage.
         val params = ConsentRequestParameters.Builder()
             .apply {
@@ -57,23 +56,16 @@ class GDPRManager {
             activity,
             params,
             { // The consent information state was updated.
-                if (!isGDPR()) {
-                    mCallback?.initializeMobileAdsSdk(true)
-                    return@requestConsentInfoUpdate
-                } else if (canShowAds()) {
-                    mCallback?.initializeMobileAdsSdk(true)
-                    return@requestConsentInfoUpdate
-                }
                 // You are now ready to check if a form is available.
-                if (consentInformation.isConsentFormAvailable) {
-                    loadForm(activity)
+                UserMessagingPlatform.loadAndShowConsentFormIfRequired(activity) {
+                    callback?.initializeMobileAdsSdk(canShowAds() || canShowPersonalizedAds())
                 }
                 printLogs("requestConsentInfoUpdate")
             },
             {
                 // Handle the error.
                 Log.d(TAG, it.message.toString())
-                mCallback?.initializeMobileAdsSdk(false)
+                callback?.initializeMobileAdsSdk(false)
                 printLogs("requestConsentInfoUpdate error")
             }
         )
@@ -97,29 +89,6 @@ class GDPRManager {
             }
         } else {
             AdsStatus.Personalized
-        }
-    }
-
-
-    private fun loadForm(activity: Activity, force: Boolean = false) {
-        UserMessagingPlatform.loadConsentForm(
-            activity,
-            { consentForm ->
-                printLogs("loadConsentForm")
-                if (force || consentInformation.consentStatus == ConsentInformation.ConsentStatus.REQUIRED) {
-                    consentForm.show(activity) {
-                        // Handle dismissal by reloading form.
-                        loadForm(activity)
-                        mCallback?.initializeMobileAdsSdk(canShowAds() || canShowPersonalizedAds())
-                        Log.d(TAG, "consentForm.show FormError=$it")
-                    }
-                }
-            }
-        ) {
-            // / Handle Error.
-            Log.d(TAG, it.message.toString())
-            printLogs("loadConsentForm error")
-            mCallback?.initializeMobileAdsSdk(false)
         }
     }
 
@@ -217,7 +186,7 @@ class GDPRManager {
 ----------------------
             """
 
-        Log.d(TAG, massage)
+        if (BuildConfig.DEBUG) Log.d(TAG, massage)
     }
 
     interface Callback {
