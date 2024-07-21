@@ -13,7 +13,7 @@ repositories {
 # Step2.
 ```
 dependencies {
-	implementation ("com.github.sonbuingoc:v2lib:(https://jitpack.io/#sonbuingoc/v2lib)")
+	implementation ("com.github.sonbuingoc:v2lib:master-SNAPSHOT")
 }
 ```
 
