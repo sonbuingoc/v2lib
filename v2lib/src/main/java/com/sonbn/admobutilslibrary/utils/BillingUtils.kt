@@ -1,7 +1,6 @@
-package com.AlarmClock.LoudAlarm.ChallengesAlarmClock.utils
+package com.sonbn.admobutilslibrary.utils
 
 import android.app.Activity
-import android.util.Log
 import com.android.billingclient.api.AcknowledgePurchaseParams
 import com.android.billingclient.api.BillingClient
 import com.android.billingclient.api.BillingClientStateListener

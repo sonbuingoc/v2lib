@@ -25,7 +25,7 @@ class GDPRManager {
             return instance!!
         }
     }
-    
+
     fun init(activity: Activity, callback: Callback? = null) {
         prefs = PreferenceManager.getDefaultSharedPreferences(activity.application)
 
@@ -34,17 +34,8 @@ class GDPRManager {
             return
         }
         // Set tag for underage of consent. false means users are not underage.
-        val params = ConsentRequestParameters.Builder()
-            .apply {
-                if (BuildConfig.DEBUG) {
-                    setConsentDebugSettings(
-                        ConsentDebugSettings.Builder(activity)
-                            .setDebugGeography(ConsentDebugSettings.DebugGeography.DEBUG_GEOGRAPHY_EEA)
-                            // .setDebugGeography(ConsentDebugSettings.DebugGeography.DEBUG_GEOGRAPHY_NOT_EEA)
-                            .build()
-                    )
-                }
-            }
+        val params = ConsentRequestParameters
+            .Builder()
             .build()
 
         consentInformation = UserMessagingPlatform.getConsentInformation(activity)
@@ -64,7 +55,6 @@ class GDPRManager {
             },
             {
                 // Handle the error.
-                Log.d(TAG, it.message.toString())
                 callback?.initializeMobileAdsSdk(false)
                 printLogs("requestConsentInfoUpdate error")
             }
