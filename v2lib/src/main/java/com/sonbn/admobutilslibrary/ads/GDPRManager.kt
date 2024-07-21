@@ -2,8 +2,8 @@ package com.sonbn.admobutilslibrary.ads
 
 import android.app.Activity
 import android.content.SharedPreferences
-import android.util.Log
 import androidx.preference.PreferenceManager
+import android.util.Log
 import com.facebook.shimmer.BuildConfig
 import com.google.android.ump.ConsentDebugSettings
 import com.google.android.ump.ConsentInformation
@@ -11,9 +11,17 @@ import com.google.android.ump.ConsentRequestParameters
 import com.google.android.ump.UserMessagingPlatform
 
 
+enum class AdsStatus {
+    NotInitialized,
+    NonPersonalized,
+    Personalized,
+    Denied,
+    Error
+}
 class GDPRManager {
     private lateinit var prefs: SharedPreferences
     private lateinit var consentInformation: ConsentInformation
+    private var mCallback: Callback? = null
 
     companion object {
         private const val TAG = "GDPRManager"
@@ -26,16 +34,26 @@ class GDPRManager {
         }
     }
 
-    fun init(activity: Activity, callback: Callback? = null) {
-        prefs = PreferenceManager.getDefaultSharedPreferences(activity.application)
 
+    fun init(activity: Activity, callback: Callback) {
+        this.mCallback = callback
+        prefs = PreferenceManager.getDefaultSharedPreferences(activity.application)
+        // Set tag for underage of consent. false means users are not underage.
         if (!isGDPR()){
-            callback?.initializeMobileAdsSdk(true)
+            mCallback?.initializeMobileAdsSdk(true)
             return
         }
-        // Set tag for underage of consent. false means users are not underage.
-        val params = ConsentRequestParameters
-            .Builder()
+        val params = ConsentRequestParameters.Builder()
+            .apply {
+                if (BuildConfig.DEBUG) {
+                    setConsentDebugSettings(
+                        ConsentDebugSettings.Builder(activity)
+                            .setDebugGeography(ConsentDebugSettings.DebugGeography.DEBUG_GEOGRAPHY_EEA)
+                            // .setDebugGeography(ConsentDebugSettings.DebugGeography.DEBUG_GEOGRAPHY_NOT_EEA)
+                            .build()
+                    )
+                }
+            }
             .build()
 
         consentInformation = UserMessagingPlatform.getConsentInformation(activity)
@@ -46,16 +64,16 @@ class GDPRManager {
         consentInformation.requestConsentInfoUpdate(
             activity,
             params,
-            { // The consent information state was updated.
-                // You are now ready to check if a form is available.
-                UserMessagingPlatform.loadAndShowConsentFormIfRequired(activity) {
-                    callback?.initializeMobileAdsSdk(canShowAds() || canShowPersonalizedAds())
+            {
+                if (consentInformation.isConsentFormAvailable) {
+                    loadForm(activity)
+                }else{
+                    mCallback?.initializeMobileAdsSdk(false)
                 }
                 printLogs("requestConsentInfoUpdate")
             },
             {
-                // Handle the error.
-                callback?.initializeMobileAdsSdk(false)
+                mCallback?.initializeMobileAdsSdk(false)
                 printLogs("requestConsentInfoUpdate error")
             }
         )
@@ -79,6 +97,14 @@ class GDPRManager {
             }
         } else {
             AdsStatus.Personalized
+        }
+    }
+
+
+    private fun loadForm(activity: Activity) {
+        UserMessagingPlatform.loadAndShowConsentFormIfRequired(activity) { consentForm ->
+            printLogs("loadConsentForm")
+            mCallback?.initializeMobileAdsSdk(canShowAds() || canShowPersonalizedAds())
         }
     }
 
@@ -176,7 +202,7 @@ class GDPRManager {
 ----------------------
             """
 
-        if (BuildConfig.DEBUG) Log.d(TAG, massage)
+        Log.d(TAG, massage)
     }
 
     interface Callback {
