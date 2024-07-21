@@ -1,4 +1,4 @@
-[![](https://jitpack.io/v/sonbuingoc/AdmobUtilsLibrary.svg)](https://jitpack.io/#sonbuingoc/AdmobUtilsLibrary)
+[![](https://jitpack.io/v/sonbuingoc/v2lib.svg)](https://jitpack.io/#sonbuingoc/v2lib)
 
 
 # Step1. 
@@ -13,7 +13,7 @@ repositories {
 # Step2.
 ```
 dependencies {
-	implementation ("com.github.sonbuingoc:v2lib:Tag")
+	implementation ("com.github.sonbuingoc:v2lib:(https://jitpack.io/#sonbuingoc/v2lib)")
 }
 ```
 
