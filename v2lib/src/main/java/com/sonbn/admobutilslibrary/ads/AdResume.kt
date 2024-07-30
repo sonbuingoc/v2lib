@@ -22,7 +22,7 @@ import java.lang.ref.WeakReference
 import java.util.Date
 
 
-object ResumeManager {
+object AdResume {
     private const val TAG = "ResumeManager"
 
     interface ResumeListener {

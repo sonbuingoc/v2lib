@@ -149,4 +149,45 @@ object AdInterstitial {
 
         map[id]?.show(mActivity)
     }
+
+    fun loadAndShowInterstitial(
+        activity: Activity,
+        id: String,
+        onCompleteListener: () -> Unit = {}
+    ) {
+        if (!AdmobUtils.isShowAds) {
+            onCompleteListener.invoke()
+            return
+        }
+        val idInter: String = if (AdmobUtils.isDebug) AdmobUtils.INTERSTITIAL else id
+        val adRequest: AdRequest = AdRequest.Builder().build()
+        InterstitialAd.load(activity, idInter, adRequest, object : InterstitialAdLoadCallback() {
+            override fun onAdLoaded(p0: InterstitialAd) {
+                super.onAdLoaded(p0)
+                p0.apply {
+                    fullScreenContentCallback = object : FullScreenContentCallback() {
+                        override fun onAdDismissedFullScreenContent() {
+                            super.onAdDismissedFullScreenContent()
+                            onCompleteListener()
+                        }
+
+                        override fun onAdFailedToShowFullScreenContent(p0: AdError) {
+                            super.onAdFailedToShowFullScreenContent(p0)
+                            onCompleteListener()
+                        }
+
+                        override fun onAdShowedFullScreenContent() {
+                            super.onAdShowedFullScreenContent()
+                        }
+                    }
+                    show(activity)
+                }
+            }
+
+            override fun onAdFailedToLoad(p0: LoadAdError) {
+                super.onAdFailedToLoad(p0)
+                onCompleteListener()
+            }
+        })
+    }
 }

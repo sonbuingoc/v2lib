@@ -14,7 +14,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-object AOAManager {
+object AdOpen {
     private const val TAG = "AOAManager"
     private var TIME_OUT = 20 * 1000L //20s
     private val exception = CoroutineExceptionHandler { _, throwable ->
