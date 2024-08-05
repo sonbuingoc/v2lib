@@ -85,7 +85,7 @@ object AdBanner {
             frameLayout.visibility = View.GONE
             return
         }
-        val idBanner = if (AdmobUtils.isDebug) AdmobUtils.BANNER else id
+        val idBanner = if (AdmobUtils.isDebug) AdmobUtils.BANNER_COLLAPSIBLE else id
         val mAdView = AdView(mActivity)
         mAdView.setAdSize(getAdSize(mActivity))
         mAdView.adUnitId = idBanner
