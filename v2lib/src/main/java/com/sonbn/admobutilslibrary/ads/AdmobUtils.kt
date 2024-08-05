@@ -14,6 +14,11 @@ import com.google.android.gms.ads.MobileAds
 import com.google.android.gms.ads.RequestConfiguration
 import com.google.android.gms.ads.RequestConfiguration.MAX_AD_CONTENT_RATING_G
 import com.google.android.gms.ads.nativead.NativeAd
+import com.sonbn.admobutilslibrary.BuildConfig
+import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 object AdmobUtils {
     var isDebug = true
@@ -26,16 +31,18 @@ object AdmobUtils {
     const val NATIVE = "ca-app-pub-3940256099942544/2247696110"
 
     fun initMobileAds(context: Context, isShowAds: Boolean, isDebug: Boolean) {
-        AdmobUtils.isDebug = isDebug
-        AdmobUtils.isShowAds = isShowAds
-        val conf = RequestConfiguration.Builder()
-            .setMaxAdContentRating(
-                MAX_AD_CONTENT_RATING_G
-            )
-            .build()
+        CoroutineScope(Dispatchers.IO + CoroutineExceptionHandler { _, throwable -> if (BuildConfig.DEBUG) throwable.printStackTrace() }).launch {
+            AdmobUtils.isDebug = isDebug
+            AdmobUtils.isShowAds = isShowAds
+            val conf = RequestConfiguration.Builder()
+                .setMaxAdContentRating(
+                    MAX_AD_CONTENT_RATING_G
+                )
+                .build()
 
-        MobileAds.setRequestConfiguration(conf)
-        MobileAds.initialize(context) { }
+            MobileAds.setRequestConfiguration(conf)
+            MobileAds.initialize(context) { }
+        }
 
         ProcessLifecycleOwner.get().lifecycle.addObserver(object : DefaultLifecycleObserver {
             override fun onStart(owner: LifecycleOwner) {
