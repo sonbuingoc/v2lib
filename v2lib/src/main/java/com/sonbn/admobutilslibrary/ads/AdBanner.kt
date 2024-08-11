@@ -66,6 +66,7 @@ object AdBanner {
 
             override fun onAdFailedToLoad(p0: LoadAdError) {
                 super.onAdFailedToLoad(p0)
+                line.gone()
                 frameLayout.gone()
                 adBannerListener?.onAdFailedToLoad(p0)
             }
@@ -81,8 +82,8 @@ object AdBanner {
         adBannerListener: AdBannerListener? = null
     ) {
         if (!AdmobUtils.isShowAds) {
-            line.visibility = View.GONE
-            frameLayout.visibility = View.GONE
+            line.gone()
+            frameLayout.gone()
             return
         }
         val idBanner = if (AdmobUtils.isDebug) AdmobUtils.BANNER_COLLAPSIBLE else id
@@ -110,6 +111,7 @@ object AdBanner {
 
             override fun onAdFailedToLoad(p0: LoadAdError) {
                 super.onAdFailedToLoad(p0)
+                line.gone()
                 frameLayout.gone()
                 adBannerListener?.onAdFailedToLoad(p0)
             }
