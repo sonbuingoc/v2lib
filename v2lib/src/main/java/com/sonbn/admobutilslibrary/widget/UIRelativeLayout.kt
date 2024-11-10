@@ -11,6 +11,7 @@ class UIRelativeLayout @JvmOverloads constructor(
 ) : RelativeLayout(context, attrs) {
     private var cornersHelper: CornersHelper
     init {
+        setWillNotDraw(false)
         val typedArray = context.obtainStyledAttributes(attrs, R.styleable.UIRelativeLayout, 0, 0)
         val radius = typedArray.getDimension(R.styleable.UIRelativeLayout_android_radius, 0f)
         val topLeft = typedArray.getDimension(R.styleable.UIRelativeLayout_android_topLeftRadius, 0f)

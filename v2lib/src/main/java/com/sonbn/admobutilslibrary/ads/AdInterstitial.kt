@@ -92,7 +92,8 @@ object AdInterstitial {
     fun showInterstitial(
         mActivity: Activity,
         id: String,
-        showCallback: InterShowCallback? = null
+        showCallback: InterShowCallback? = null,
+        isCappingDurationMet: (Boolean) -> Unit = {}
     ) {
         if (!AdmobUtils.isShowAds) {
             return
@@ -144,9 +145,10 @@ object AdInterstitial {
         }
 
         if (SystemClock.elapsedRealtime() - startTimeShow < frequencyCapping * 1000L) {
+            isCappingDurationMet(false)
             return
         }
-
+        isCappingDurationMet(true)
         map[id]?.show(mActivity)
     }
 

@@ -12,6 +12,7 @@ class UILinearLayout @JvmOverloads constructor(
     private var cornersHelper: CornersHelper
 
     init {
+        setWillNotDraw(false)
         val typedArray = context.obtainStyledAttributes(attrs, R.styleable.UILinearLayout, 0, 0)
         val radius = typedArray.getDimension(R.styleable.UILinearLayout_android_radius, 0f)
         val topLeft =

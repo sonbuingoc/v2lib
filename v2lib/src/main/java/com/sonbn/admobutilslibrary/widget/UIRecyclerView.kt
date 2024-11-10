@@ -12,6 +12,7 @@ class UIRecyclerView @JvmOverloads constructor(
     private var cornersHelper: CornersHelper
 
     init {
+        setWillNotDraw(false)
         val typedArray = context.obtainStyledAttributes(attrs, R.styleable.UIRecyclerView, 0, 0)
         val radius = typedArray.getDimension(R.styleable.UIRecyclerView_android_radius, 0f)
         val topLeft =

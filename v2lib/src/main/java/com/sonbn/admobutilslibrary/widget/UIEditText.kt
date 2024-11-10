@@ -11,6 +11,7 @@ class UIEditText @JvmOverloads constructor(
     private var cornersHelper: CornersHelper
 
     init {
+        setWillNotDraw(false)
         val typedArray = context.obtainStyledAttributes(attrs, R.styleable.UIEditText, 0, 0)
         val radius = typedArray.getDimension(R.styleable.UIEditText_android_radius, 0f)
         val topLeft =

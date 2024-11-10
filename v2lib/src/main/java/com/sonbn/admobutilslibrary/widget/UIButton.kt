@@ -12,6 +12,7 @@ class UIButton @JvmOverloads constructor(
     private var cornersHelper: CornersHelper
 
     init {
+        setWillNotDraw(false)
         val typedArray = context.obtainStyledAttributes(attrs, R.styleable.UIButton, 0, 0)
         val radius = typedArray.getDimension(R.styleable.UIButton_android_radius, 0f)
         val topLeft = typedArray.getDimension(R.styleable.UIButton_android_topLeftRadius, 0f)

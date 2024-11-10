@@ -12,6 +12,7 @@ class UIView @JvmOverloads constructor(
     private var cornersHelper: CornersHelper
 
     init {
+        setWillNotDraw(false)
         val typedArray = context.obtainStyledAttributes(attrs, R.styleable.UIView, 0, 0)
         val radius = typedArray.getDimension(R.styleable.UIView_android_radius, 0f)
         val topLeft = typedArray.getDimension(R.styleable.UIView_android_topLeftRadius, 0f)

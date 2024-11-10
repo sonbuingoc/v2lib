@@ -12,6 +12,7 @@ class UIConstraintLayout @JvmOverloads constructor(
     private var cornersHelper: CornersHelper
 
     init {
+        setWillNotDraw(false)
         val typedArray = context.obtainStyledAttributes(attrs, R.styleable.UIConstraintLayout, 0, 0)
         val radius = typedArray.getDimension(R.styleable.UIConstraintLayout_android_radius, 0f)
         val topLeft = typedArray.getDimension(R.styleable.UIConstraintLayout_android_topLeftRadius, 0f)

@@ -12,6 +12,7 @@ class UIFrameLayout @JvmOverloads constructor(
     private var cornersHelper: CornersHelper
 
     init {
+        setWillNotDraw(false)
         val typedArray = context.obtainStyledAttributes(attrs, R.styleable.UIFrameLayout, 0, 0)
         val radius = typedArray.getDimension(R.styleable.UIFrameLayout_android_radius, 0f)
         val topLeft =
