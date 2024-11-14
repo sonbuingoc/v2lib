@@ -60,6 +60,7 @@ object AdInterstitial {
         loadCallback: InterLoadCallback? = null
     ) {
         if (!AdmobUtils.isShowAds || map[id] != null || isLoading) {
+            loadCallback?.onAdFailedToLoad(LoadAdError(0, "AdmobUtils.isShowAds = false", "", null, null))
             return
         }
         isLoading = true
@@ -96,10 +97,12 @@ object AdInterstitial {
         isCappingDurationMet: (Boolean) -> Unit = {}
     ) {
         if (!AdmobUtils.isShowAds) {
+            showCallback?.onAdFailedToShowFullScreenContent(AdError(0, "AdmobUtils.isShowAds = false", "", null))
             return
         }
         if (map[id] == null) {
             loadInterstitial(mActivity, id)
+            showCallback?.onAdFailedToShowFullScreenContent(AdError(0, "ad id: ${map[id]} == null", "", null))
             return
         }
 
