@@ -218,7 +218,8 @@ class BillingUtils {
 
 fun ProductDetails.getPrice(): String{
     return if (this.productType == BillingClient.ProductType.SUBS){
-        this.subscriptionOfferDetails?.getOrNull(0)?.pricingPhases?.pricingPhaseList?.getOrNull(0)?.formattedPrice?: ""
+        val size = this.subscriptionOfferDetails?.getOrNull(0)?.pricingPhases?.pricingPhaseList?.size?: 0
+        this.subscriptionOfferDetails?.getOrNull(0)?.pricingPhases?.pricingPhaseList?.getOrNull(size)?.formattedPrice?: ""
     }else{
         this.oneTimePurchaseOfferDetails?.formattedPrice?: ""
     }
