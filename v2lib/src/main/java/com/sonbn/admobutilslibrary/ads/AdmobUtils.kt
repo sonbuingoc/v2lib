@@ -30,6 +30,7 @@ object AdmobUtils {
     const val INTERSTITIAL = "ca-app-pub-3940256099942544/1033173712"
     const val REWARD = "ca-app-pub-3940256099942544/5224354917"
     const val NATIVE = "ca-app-pub-3940256099942544/2247696110"
+    const val NATIVE_VIDEO = "ca-app-pub-3940256099942544/1044960115"
 
     fun initMobileAds(context: Context, isShowAds: Boolean, isDebug: Boolean) {
         CoroutineScope(Dispatchers.IO + CoroutineExceptionHandler { _, throwable -> if (BuildConfig.DEBUG) throwable.printStackTrace() }).launch {

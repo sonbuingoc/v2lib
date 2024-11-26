@@ -1,10 +1,12 @@
 package com.sonbn.admobutilslibrary.ads
 
 import android.app.Activity
+import android.os.Build
 import android.os.Bundle
 import android.util.DisplayMetrics
 import android.view.LayoutInflater
 import android.view.View
+import android.view.WindowMetrics
 import android.widget.FrameLayout
 import com.facebook.shimmer.ShimmerFrameLayout
 import com.google.ads.mediation.admob.AdMobAdapter
@@ -37,11 +39,11 @@ object AdBanner {
         frameLayout: FrameLayout,
         line: View,
         adBannerListener: AdBannerListener? = null
-    ) {
+    ): AdView? {
         if (!AdmobUtils.isShowAds) {
             line.visibility = View.GONE
             frameLayout.visibility = View.GONE
-            return
+            return null
         }
         mAdBannerListener?.onFetchAd()
 
@@ -71,6 +73,7 @@ object AdBanner {
                 adBannerListener?.onAdFailedToLoad(p0)
             }
         }
+        return mAdView
     }
 
     fun showBannerCollapsible(
@@ -80,11 +83,11 @@ object AdBanner {
         line: View,
         collapsibleType: BannerCollapsibleType = BannerCollapsibleType.TOP,
         adBannerListener: AdBannerListener? = null
-    ) {
+    ): AdView? {
         if (!AdmobUtils.isShowAds) {
             line.gone()
             frameLayout.gone()
-            return
+            return null
         }
         val idBanner = if (AdmobUtils.isDebug) AdmobUtils.BANNER_COLLAPSIBLE else id
         val mAdView = AdView(mActivity)
@@ -116,15 +119,20 @@ object AdBanner {
                 adBannerListener?.onAdFailedToLoad(p0)
             }
         }
+        return mAdView
     }
 
     private fun getAdSize(mActivity: Activity): AdSize {
-        val display = mActivity.windowManager.defaultDisplay
-        val outMetrics = DisplayMetrics()
-        display.getMetrics(outMetrics)
-        val widthPixels = outMetrics.widthPixels.toFloat()
-        val density = outMetrics.density
-        val adWidth = (widthPixels / density).toInt()
+        val displayMetrics = mActivity.resources.displayMetrics
+        val adWidthPixels =
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                val windowMetrics: WindowMetrics = mActivity.windowManager.currentWindowMetrics
+                windowMetrics.bounds.width()
+            } else {
+                displayMetrics.widthPixels
+            }
+        val density = displayMetrics.density
+        val adWidth = (adWidthPixels / density).toInt()
         return AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(mActivity, adWidth)
     }
 

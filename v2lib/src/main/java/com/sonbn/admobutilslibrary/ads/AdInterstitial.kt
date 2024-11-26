@@ -25,7 +25,6 @@ object AdInterstitial {
         fun onFetchAd()
         fun onAdLoaded(interstitialAd: InterstitialAd)
         fun onAdFailedToLoad(loadAdError: LoadAdError)
-
         fun onAdShowedFullScreenContent()
         fun onAdFailedToShowFullScreenContent(adError: AdError)
     }

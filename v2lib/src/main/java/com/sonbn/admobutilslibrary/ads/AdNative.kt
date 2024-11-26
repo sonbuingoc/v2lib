@@ -24,12 +24,18 @@ import com.sonbn.admobutilslibrary.utils.gone
 object AdNative {
     private val map = mutableMapOf<String, NativeAd>()
     private var onAdNativeListener: OnAdNativeListener? = null
+
     interface OnAdNativeListener {
         fun onFetchAd()
         fun onAdLoaded(nativeAd: NativeAd)
         fun onAdFailedToLoad(adError: LoadAdError)
 
     }
+
+    fun interface OnAdLoadListener {
+        fun onAdLoadComplete(nativeAd: NativeAd?)
+    }
+
     interface NativeListener {
         fun onAdLoaded(nativeAd: NativeAd)
         fun onAdFailedToLoad(adError: LoadAdError)
@@ -40,10 +46,31 @@ object AdNative {
         this.onAdNativeListener = onAdNativeListener
     }
 
+    fun loadNative(activity: Activity, id: String, onAdLoadListener: OnAdLoadListener) {
+        var nativeId = id
+        if (AdmobUtils.isDebug) {
+            nativeId = AdmobUtils.NATIVE_VIDEO
+        }
+        if (!AdmobUtils.isShowAds) {
+            onAdLoadListener.onAdLoadComplete(null)
+            return
+        }
+        val builder = AdLoader.Builder(activity, nativeId).forNativeAd { nativeAd ->
+            onAdLoadListener.onAdLoadComplete(nativeAd)
+        }.withAdListener(object : AdListener() {
+            override fun onAdFailedToLoad(p0: LoadAdError) {
+                super.onAdFailedToLoad(p0)
+                onAdLoadListener.onAdLoadComplete(null)
+            }
+        }).build()
+        builder.loadAd(AdRequest.Builder().build())
+    }
+
+    @Deprecated("//")
     fun loadNative(activity: Activity, id: String) {
         var nativeId = id
         if (AdmobUtils.isDebug) {
-            nativeId = AdmobUtils.NATIVE
+            nativeId = AdmobUtils.NATIVE_VIDEO
         }
         if (!AdmobUtils.isShowAds) {
             return
@@ -71,8 +98,10 @@ object AdNative {
         }
         onAdNativeListener?.onFetchAd()
         val nativeId = if (AdmobUtils.isDebug) AdmobUtils.NATIVE else id
-        val layoutShimmer1 = activity.layoutInflater.inflate(idShimmer1, null, false) as ShimmerFrameLayout
-        val layoutShimmer2 = activity.layoutInflater.inflate(idShimmer2, null, false) as ShimmerFrameLayout
+        val layoutShimmer1 =
+            activity.layoutInflater.inflate(idShimmer1, null, false) as ShimmerFrameLayout
+        val layoutShimmer2 =
+            activity.layoutInflater.inflate(idShimmer2, null, false) as ShimmerFrameLayout
 
         layoutShimmer1.startShimmer()
         viewGroup1.removeAllViews()
@@ -131,7 +160,8 @@ object AdNative {
         }
         onAdNativeListener?.onFetchAd()
         val nativeId = if (AdmobUtils.isDebug) AdmobUtils.NATIVE else id
-        val layoutShimmer: ShimmerFrameLayout = activity.layoutInflater.inflate(idShimmer, null, false) as ShimmerFrameLayout
+        val layoutShimmer: ShimmerFrameLayout =
+            activity.layoutInflater.inflate(idShimmer, null, false) as ShimmerFrameLayout
         layoutShimmer.startShimmer()
         viewGroup.removeAllViews()
         viewGroup.addView(layoutShimmer)
@@ -163,7 +193,8 @@ object AdNative {
             return
         }
         val nativeId = if (AdmobUtils.isDebug) AdmobUtils.NATIVE else id
-        val layoutShimmer: ShimmerFrameLayout = activity.layoutInflater.inflate(idShimmer, null, false) as ShimmerFrameLayout
+        val layoutShimmer: ShimmerFrameLayout =
+            activity.layoutInflater.inflate(idShimmer, null, false) as ShimmerFrameLayout
         layoutShimmer.startShimmer()
         viewGroup.removeAllViews()
         viewGroup.addView(layoutShimmer)
@@ -187,12 +218,13 @@ object AdNative {
         id: String,
         nativeAd: NativeAd? = null,
         parent: ViewGroup,
-        idLayout: Int
+        idLayoutNative: Int
     ) {
         if (!AdmobUtils.isShowAds) {
             return
         }
-        val layoutNative = activity.layoutInflater.inflate(idLayout, null, false) as NativeAdView
+        val layoutNative =
+            activity.layoutInflater.inflate(idLayoutNative, null, false) as NativeAdView
         parent.removeAllViews()
         if (nativeAd != null) {
             parent.addView(setNative(nativeAd, layoutNative))
@@ -201,6 +233,16 @@ object AdNative {
                 parent.addView(setNative(it, layoutNative))
             }
         }
+    }
+
+    fun showNative(nativeAd: NativeAd, viewGroup: ViewGroup, layoutNative: NativeAdView) {
+        if (!AdmobUtils.isShowAds) {
+            viewGroup.gone()
+            return
+        }
+        val nativeAdView = setNative(nativeAd, layoutNative)
+        viewGroup.removeAllViews()
+        viewGroup.addView(nativeAdView)
     }
 
     private fun setNative(nativeAd: NativeAd, layoutNative: NativeAdView): NativeAdView {
