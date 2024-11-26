@@ -49,7 +49,7 @@ object AdNative {
     fun loadNative(activity: Activity, id: String, onAdLoadListener: OnAdLoadListener) {
         var nativeId = id
         if (AdmobUtils.isDebug) {
-            nativeId = AdmobUtils.NATIVE_VIDEO
+            nativeId = AdmobUtils.NATIVE
         }
         if (!AdmobUtils.isShowAds) {
             onAdLoadListener.onAdLoadComplete(null)
@@ -70,7 +70,7 @@ object AdNative {
     fun loadNative(activity: Activity, id: String) {
         var nativeId = id
         if (AdmobUtils.isDebug) {
-            nativeId = AdmobUtils.NATIVE_VIDEO
+            nativeId = AdmobUtils.NATIVE
         }
         if (!AdmobUtils.isShowAds) {
             return
@@ -97,7 +97,7 @@ object AdNative {
             return
         }
         onAdNativeListener?.onFetchAd()
-        val nativeId = if (AdmobUtils.isDebug) AdmobUtils.NATIVE_VIDEO else id
+        val nativeId = if (AdmobUtils.isDebug) AdmobUtils.NATIVE else id
         val layoutShimmer1 =
             activity.layoutInflater.inflate(idShimmer1, null, false) as ShimmerFrameLayout
         val layoutShimmer2 =
@@ -159,7 +159,7 @@ object AdNative {
             return
         }
         onAdNativeListener?.onFetchAd()
-        val nativeId = if (AdmobUtils.isDebug) AdmobUtils.NATIVE_VIDEO else id
+        val nativeId = if (AdmobUtils.isDebug) AdmobUtils.NATIVE else id
         val layoutShimmer: ShimmerFrameLayout =
             activity.layoutInflater.inflate(idShimmer, null, false) as ShimmerFrameLayout
         layoutShimmer.startShimmer()
@@ -192,7 +192,7 @@ object AdNative {
             viewGroup.visibility = View.GONE
             return
         }
-        val nativeId = if (AdmobUtils.isDebug) AdmobUtils.NATIVE_VIDEO else id
+        val nativeId = if (AdmobUtils.isDebug) AdmobUtils.NATIVE else id
         val layoutShimmer: ShimmerFrameLayout =
             activity.layoutInflater.inflate(idShimmer, null, false) as ShimmerFrameLayout
         layoutShimmer.startShimmer()
