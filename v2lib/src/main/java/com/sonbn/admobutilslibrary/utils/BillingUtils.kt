@@ -68,7 +68,7 @@ class BillingUtils {
         billingClient?.startConnection(object : BillingClientStateListener {
             override fun onBillingSetupFinished(billingResult: BillingResult) {
                 if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
-                    CoroutineScope(Dispatchers.IO + CoroutineExceptionHandler { coroutineContext, throwable ->  }).launch {
+                    CoroutineScope(Dispatchers.IO + CoroutineExceptionHandler { coroutineContext, throwable -> }).launch {
                         val productDetailsDeferred = productIds.map { pair ->
                             async {
                                 fetchProductDetails(pair)
@@ -146,12 +146,14 @@ class BillingUtils {
 
     fun launchPurchaseFlow(activity: Activity, productDetails: ProductDetails) {
         val productDetailsParamsList: MutableList<ProductDetailsParams> = mutableListOf(
-            if (productDetails.productType == BillingClient.ProductType.SUBS){
+            if (productDetails.productType == BillingClient.ProductType.SUBS) {
                 ProductDetailsParams.newBuilder()
                     .setProductDetails(productDetails)
-                    .setOfferToken(productDetails.subscriptionOfferDetails?.get(0)?.offerToken?: "")
+                    .setOfferToken(
+                        productDetails.subscriptionOfferDetails?.get(0)?.offerToken ?: ""
+                    )
                     .build()
-            }else{
+            } else {
                 ProductDetailsParams.newBuilder()
                     .setProductDetails(productDetails)
                     .build()
@@ -216,11 +218,12 @@ class BillingUtils {
     }
 }
 
-fun ProductDetails.getPrice(): String{
-    return if (this.productType == BillingClient.ProductType.SUBS){
-        val size = this.subscriptionOfferDetails?.getOrNull(0)?.pricingPhases?.pricingPhaseList?.size?: 0
-        this.subscriptionOfferDetails?.getOrNull(0)?.pricingPhases?.pricingPhaseList?.getOrNull(size)?.formattedPrice?: ""
-    }else{
-        this.oneTimePurchaseOfferDetails?.formattedPrice?: ""
+fun ProductDetails.getPrice(): String? {
+    return if (this.productType == BillingClient.ProductType.SUBS) {
+        val size =
+            this.subscriptionOfferDetails?.getOrNull(0)?.pricingPhases?.pricingPhaseList?.size ?: 0
+        this.subscriptionOfferDetails?.getOrNull(0)?.pricingPhases?.pricingPhaseList?.getOrNull(size)?.formattedPrice
+    } else {
+        this.oneTimePurchaseOfferDetails?.formattedPrice
     }
 }
