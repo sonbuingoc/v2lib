@@ -124,7 +124,6 @@ object AdInterstitial {
                 map[id] = null
                 showCallback?.onAdFailedToShowFullScreenContent(p0)
                 loadInterstitial(mActivity, id)
-                startTimeShow = SystemClock.elapsedRealtime()
                 onAdInterstitialListener?.onAdFailedToShowFullScreenContent(p0)
             }
 
@@ -154,10 +153,10 @@ object AdInterstitial {
     fun loadAndShowInterstitial(
         activity: Activity,
         id: String,
-        onCompleteListener: () -> Unit = {}
+        onCompleteListener: (Boolean) -> Unit = {}
     ) {
         if (!AdmobUtils.isShowAds) {
-            onCompleteListener.invoke()
+            onCompleteListener(false)
             return
         }
         val idInter: String = if (AdmobUtils.isDebug) AdmobUtils.INTERSTITIAL else id
@@ -169,12 +168,13 @@ object AdInterstitial {
                     fullScreenContentCallback = object : FullScreenContentCallback() {
                         override fun onAdDismissedFullScreenContent() {
                             super.onAdDismissedFullScreenContent()
-                            onCompleteListener()
+                            startTimeShow = SystemClock.elapsedRealtime()
+                            onCompleteListener(true)
                         }
 
                         override fun onAdFailedToShowFullScreenContent(p0: AdError) {
                             super.onAdFailedToShowFullScreenContent(p0)
-                            onCompleteListener()
+                            onCompleteListener(false)
                         }
 
                         override fun onAdShowedFullScreenContent() {
@@ -187,7 +187,7 @@ object AdInterstitial {
 
             override fun onAdFailedToLoad(p0: LoadAdError) {
                 super.onAdFailedToLoad(p0)
-                onCompleteListener()
+                onCompleteListener(false)
             }
         })
     }
