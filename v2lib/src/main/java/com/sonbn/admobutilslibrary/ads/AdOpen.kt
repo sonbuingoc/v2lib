@@ -40,7 +40,7 @@ object AdOpen {
     }
 
     interface OnAoaShowCompleteListener {
-        fun onAoaShowComplete()
+        fun onAoaShowComplete(boolean: Boolean)
     }
 
     fun setAOAListener(aoaListener: AOAListener) {
@@ -54,7 +54,7 @@ object AdOpen {
         onAoaShowCompleteListener: OnAoaShowCompleteListener
     ) {
         if (!AdmobUtils.isShowAds) {
-            onAoaShowCompleteListener.onAoaShowComplete()
+            onAoaShowCompleteListener.onAoaShowComplete(false)
             return
         }
         /**/
@@ -64,17 +64,17 @@ object AdOpen {
             delay(timeoutJob)
             isTimeOutCall = true
             aoaListener?.onTimeout()
-            onAoaShowCompleteListener.onAoaShowComplete()
+            onAoaShowCompleteListener.onAoaShowComplete(false)
         }
         val fullScreenContentCallback: FullScreenContentCallback =
             object : FullScreenContentCallback() {
                 override fun onAdDismissedFullScreenContent() {
-                    onAoaShowCompleteListener.onAoaShowComplete()
+                    onAoaShowCompleteListener.onAoaShowComplete(true)
                     Log.d(TAG, "onAdDismissedFullScreenContent")
                 }
 
                 override fun onAdFailedToShowFullScreenContent(adError: AdError) {
-                    onAoaShowCompleteListener.onAoaShowComplete()
+                    onAoaShowCompleteListener.onAoaShowComplete(false)
                     job.cancel()
                     aoaListener?.onShowAdError(adError)
                     Log.d(TAG, "onAdFailedToShowFullScreenContent: ${adError.message}")
@@ -93,14 +93,14 @@ object AdOpen {
                 if (!isTimeOutCall && AdmobUtils.isForeground) {
                     ad.show(mActivity)
                 } else {
-                    onAoaShowCompleteListener.onAoaShowComplete()
+                    onAoaShowCompleteListener.onAoaShowComplete(false)
                 }
                 aoaListener?.onAdLoaded(ad)
                 Log.d(TAG, "onAdLoaded")
             }
 
             override fun onAdFailedToLoad(loadAdError: LoadAdError) {
-                onAoaShowCompleteListener.onAoaShowComplete()
+                onAoaShowCompleteListener.onAoaShowComplete(false)
                 aoaListener?.onAdFailedToLoad(loadAdError)
                 job.cancel()
                 Log.d(TAG, "onAdFailedToLoad: ${loadAdError.message}")
